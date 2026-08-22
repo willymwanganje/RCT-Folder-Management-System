@@ -11,7 +11,9 @@ export default function LoginPage() {
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
 
   if (user) {
     return <Navigate to="/" replace />;
@@ -22,18 +24,37 @@ export default function LoginPage() {
 
     if (busy) return;
 
+    setError("");
+
+    const cleanEmail = email.trim();
+
+    if (!cleanEmail || !password) {
+      const message = "Please enter your email and password.";
+      setError(message);
+      toast?.push(message, "error");
+      return;
+    }
+
     setBusy(true);
 
     try {
-      await login(email.trim(), password);
+      await login(cleanEmail, password);
 
-      toast.push("Welcome back");
+      toast?.push("Welcome back", "success");
+
       navigate(location.state?.from?.pathname || "/", {
         replace: true,
       });
     } catch (err) {
       console.error("Login error:", err);
-      toast.push(err?.message || "Login failed", "error");
+
+      const message =
+        err?.message ||
+        err?.payload?.message ||
+        "Invalid email or password";
+
+      setError(message);
+      toast?.push(message, "error");
     } finally {
       setBusy(false);
     }
@@ -101,7 +122,18 @@ export default function LoginPage() {
                       </p>
                     </div>
 
-                    <form onSubmit={onSubmit}>
+                    {/* ERROR MESSAGE */}
+                    {error && (
+                      <div
+                        className="alert alert-danger d-flex align-items-center"
+                        role="alert"
+                      >
+                        <i className="bi bi-exclamation-circle-fill me-2"></i>
+                        <span>{error}</span>
+                      </div>
+                    )}
+
+                    <form onSubmit={onSubmit} noValidate>
 
                       {/* EMAIL */}
                       <div className="mb-3">
@@ -118,11 +150,13 @@ export default function LoginPage() {
                             type="email"
                             className="form-control"
                             value={email}
-                            onChange={(e) =>
-                              setEmail(e.target.value)
-                            }
+                            onChange={(e) => {
+                              setEmail(e.target.value);
+                              if (error) setError("");
+                            }}
                             placeholder="Enter your email"
                             autoComplete="username"
+                            disabled={busy}
                             required
                           />
                         </div>
@@ -140,16 +174,45 @@ export default function LoginPage() {
                           </span>
 
                           <input
-                            type="password"
+                            type={showPassword ? "text" : "password"}
                             className="form-control"
                             value={password}
-                            onChange={(e) =>
-                              setPassword(e.target.value)
-                            }
+                            onChange={(e) => {
+                              setPassword(e.target.value);
+                              if (error) setError("");
+                            }}
                             placeholder="Enter your password"
                             autoComplete="current-password"
+                            disabled={busy}
                             required
                           />
+
+                          <button
+                            type="button"
+                            className="btn btn-outline-secondary"
+                            onClick={() =>
+                              setShowPassword((prev) => !prev)
+                            }
+                            disabled={busy}
+                            aria-label={
+                              showPassword
+                                ? "Hide password"
+                                : "Show password"
+                            }
+                            title={
+                              showPassword
+                                ? "Hide password"
+                                : "Show password"
+                            }
+                          >
+                            <i
+                              className={
+                                showPassword
+                                  ? "bi bi-eye-slash"
+                                  : "bi bi-eye"
+                              }
+                            ></i>
+                          </button>
                         </div>
                       </div>
 
@@ -176,6 +239,7 @@ export default function LoginPage() {
                         )}
                       </button>
 
+                      {/* FORGOT PASSWORD */}
                       <div className="text-center mt-3">
                         <Link
                           to="/forgot-password"
