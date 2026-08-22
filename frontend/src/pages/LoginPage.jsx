@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, Navigate, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { useToast } from "../context/ToastContext";
+import { API_URL } from "../services/api";
 
 export default function LoginPage() {
   const { user, login } = useAuth();
@@ -14,6 +15,11 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+
+  useEffect(() => {
+    // Wake the Render free-tier API before the user submits.
+    fetch(`${API_URL}/api/health`).catch(() => {});
+  }, []);
 
   if (user) {
     return <Navigate to="/" replace />;
@@ -31,7 +37,7 @@ export default function LoginPage() {
     if (!cleanEmail || !password) {
       const message = "Please enter your email and password.";
       setError(message);
-      toast?.push(message, "error");
+      toast.push(message, "error");
       return;
     }
 
@@ -40,7 +46,7 @@ export default function LoginPage() {
     try {
       await login(cleanEmail, password);
 
-      toast?.push("Welcome back", "success");
+      toast.push("Welcome back", "success");
 
       navigate(location.state?.from?.pathname || "/", {
         replace: true,
@@ -54,7 +60,7 @@ export default function LoginPage() {
         "Invalid email or password";
 
       setError(message);
-      toast?.push(message, "error");
+      toast.push(message, "error");
     } finally {
       setBusy(false);
     }

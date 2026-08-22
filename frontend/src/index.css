@@ -740,21 +740,25 @@ textarea:focus {
   display: flex;
   flex-direction: column;
   gap: 9px;
-  z-index: 100;
+  z-index: 10910;
+  pointer-events: none;
 }
 
-.toast {
+.app-toast {
+  display: block;
+  max-width: 360px;
   padding: 13px 16px;
   border-radius: 11px;
   color: white;
   box-shadow: var(--rct-shadow-lg);
+  pointer-events: auto;
 }
 
-.toast-success {
+.app-toast-success {
   background: var(--rct-green-2);
 }
 
-.toast-error {
+.app-toast-error {
   background: var(--rct-danger);
 }
 

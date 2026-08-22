@@ -3,6 +3,7 @@ const express = require("express");
 const cors = require("cors");
 const helmet = require("helmet");
 
+const { env } = require("./config/env");
 const { errorHandler, notFound } = require("./middleware/errorHandler");
 
 const {
@@ -19,11 +20,45 @@ const app = express();
 
 app.set("trust proxy", 1);
 
-const allowedOrigins = [
+const defaultOrigins = [
   "http://localhost:5173",
   "http://localhost:3000",
   "https://rct-folder-management-system-cepf-ten.vercel.app",
 ];
+
+const envOrigins = [env.frontendUrl, env.corsOrigins]
+  .filter(Boolean)
+  .flatMap((value) =>
+    String(value)
+      .split(",")
+      .map((item) => item.trim())
+      .filter(Boolean)
+  );
+
+const allowedOrigins = new Set([...defaultOrigins, ...envOrigins]);
+
+function isAllowedOrigin(origin) {
+  if (!origin) return true;
+  if (allowedOrigins.has(origin)) return true;
+
+  try {
+    const { hostname } = new URL(origin);
+    if (hostname === "localhost" || hostname === "127.0.0.1") {
+      return true;
+    }
+    // Vercel production + preview deployments for this project
+    if (
+      hostname.endsWith(".vercel.app") &&
+      hostname.includes("rct-folder-management-system")
+    ) {
+      return true;
+    }
+  } catch {
+    return false;
+  }
+
+  return false;
+}
 
 app.use(
   helmet({
@@ -36,20 +71,13 @@ app.use(
 
 app.use(
   cors({
-    origin: function (origin, callback) {
-      // Allow requests with no Origin header
-      // e.g. direct browser/API requests, Postman, server-to-server
-      if (!origin) {
+    origin(origin, callback) {
+      if (isAllowedOrigin(origin)) {
         return callback(null, true);
       }
-
-      if (allowedOrigins.includes(origin)) {
-        return callback(null, true);
-      }
-
-      return callback(
-        new Error(`CORS blocked origin: ${origin}`)
-      );
+      // Reject without throwing — a thrown error becomes a 500 and the
+      // browser reports it as a network failure ("Unable to connect").
+      return callback(null, false);
     },
     credentials: true,
   })

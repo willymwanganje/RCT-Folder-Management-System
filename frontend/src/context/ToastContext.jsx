@@ -16,7 +16,7 @@ export function ToastProvider({ children }) {
       {children}
       <div className="toast-stack">
         {toasts.map((t) => (
-          <div key={t.id} className={`toast toast-${t.type}`}>
+          <div key={t.id} className={`app-toast app-toast-${t.type}`} role="status">
             {t.message}
           </div>
         ))}

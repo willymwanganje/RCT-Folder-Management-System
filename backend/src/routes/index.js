@@ -15,6 +15,7 @@ const authLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
   message: { success: false, message: "Too many attempts. Please try again later." },
+  validate: { trustProxy: false },
 });
 
 function authRoutes() {

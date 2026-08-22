@@ -1,6 +1,25 @@
-const API_URL = (
-  import.meta.env.VITE_API_URL || "http://localhost:5000"
-).replace(/\/$/, "");
+function resolveApiUrl() {
+  const raw = import.meta.env.VITE_API_URL;
+
+  // Empty string means same-origin (Vercel /api rewrite in production).
+  if (raw === "" || raw === "/") {
+    return "";
+  }
+
+  if (typeof raw === "string" && raw.trim()) {
+    return raw.trim().replace(/\/$/, "");
+  }
+
+  // Never fall back to localhost in a production build.
+  if (import.meta.env.PROD) {
+    return "";
+  }
+
+  return "http://localhost:5000";
+}
+
+const API_URL = resolveApiUrl();
+const REQUEST_TIMEOUT_MS = 60000;
 
 export function fileUrl(pathOrUrl) {
   if (!pathOrUrl) return null;
@@ -41,11 +60,14 @@ async function request(
   }
 
   let res;
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
 
   try {
     res = await fetch(`${API_URL}${path}`, {
       method,
       headers,
+      signal: controller.signal,
       body: isForm
         ? body
         : body
@@ -53,12 +75,17 @@ async function request(
           : undefined,
     });
   } catch (err) {
+    const timedOut = err?.name === "AbortError";
     const error = new Error(
-      "Unable to connect to the server. Please check your connection and try again."
+      timedOut
+        ? "The server is taking too long to respond. It may be waking up — please try again."
+        : "Unable to connect to the server. Please check your connection and try again."
     );
 
     error.cause = err;
     throw error;
+  } finally {
+    clearTimeout(timer);
   }
 
   const contentType = res.headers.get("content-type") || "";

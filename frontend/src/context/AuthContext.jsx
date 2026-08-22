@@ -30,9 +30,16 @@ export function AuthProvider({ children }) {
 
   async function login(email, password) {
     const res = await api.post("/api/auth/login", { email, password });
-    setToken(res.data.token);
-    setUser(res.data.user);
-    return res.data.user;
+    const token = res?.data?.token;
+    const nextUser = res?.data?.user;
+
+    if (!token || !nextUser) {
+      throw new Error("Login succeeded but the server did not return a session");
+    }
+
+    setToken(token);
+    setUser(nextUser);
+    return nextUser;
   }
 
   async function logout() {

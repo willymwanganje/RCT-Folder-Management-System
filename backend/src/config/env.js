@@ -20,6 +20,7 @@ const env = {
   jwtSecret: process.env.JWT_SECRET || "dev-only-jwt-secret",
   jwtExpiresIn: process.env.JWT_EXPIRES_IN || "8h",
   frontendUrl: process.env.FRONTEND_URL || "http://localhost:5173",
+  corsOrigins: process.env.CORS_ORIGINS || "",
   storageProvider: process.env.STORAGE_PROVIDER || "local",
   maxFileSizeMb: Number(process.env.MAX_FILE_SIZE_MB) || 25,
   allowedFileTypes:

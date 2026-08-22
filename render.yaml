@@ -5,7 +5,7 @@ services:
     rootDir: backend
     plan: starter
     buildCommand: npm install && npx prisma generate
-    startCommand: npx prisma migrate deploy && npm start
+    startCommand: npx prisma migrate deploy && npx prisma db seed && npm start
     healthCheckPath: /api/health
     envVars:
       - key: NODE_ENV
@@ -17,7 +17,9 @@ services:
       - key: JWT_EXPIRES_IN
         value: 8h
       - key: FRONTEND_URL
-        sync: false
+        value: https://rct-folder-management-system-cepf-ten.vercel.app
+      - key: CORS_ORIGINS
+        value: https://rct-folder-management-system-cepf-ten.vercel.app
       - key: STORAGE_PROVIDER
         value: cloudinary
       - key: CLOUDINARY_CLOUD_NAME
