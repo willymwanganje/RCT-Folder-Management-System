@@ -763,49 +763,123 @@ textarea:focus {
 }
 
 /* =========================================================
-   MODAL
+   RCT MODAL
+   Unique class names to avoid Bootstrap conflicts
    ========================================================= */
-
-.modal-backdrop {
+.rct-modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(8, 35, 27, 0.55);
-  backdrop-filter: blur(4px);
-  display: grid;
-  place-items: center;
-  z-index: 90;
-  padding: 16px;
+  z-index: 9999;
+
+  /* Light overlay - no blur */
+  background: rgba(8, 35, 27, 0.18);
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 20px;
+  overflow-y: auto;
 }
 
-.modal {
-  background: white;
-  border-radius: 18px;
+.rct-modal {
+  position: relative;
+  z-index: 10000;
+
   width: min(520px, 100%);
-  padding: 9px 9px 18px;
-  box-shadow: 0 25px 70px rgba(0, 0, 0, 0.22);
+  max-height: calc(100vh - 40px);
+
+  background: #ffffff;
+  color: var(--rct-text);
+
+  border: 1px solid var(--rct-border);
+  border-radius: 18px;
+
+  box-shadow: 0 25px 70px rgba(0, 0, 0, 0.20);
+
+  overflow: hidden;
+
+  animation: rctModalShow 0.18s ease-out;
 }
 
-.modal-wide {
+.rct-modal-wide {
   width: min(720px, 100%);
 }
 
-.modal header {
+.rct-modal-header {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  padding: 10px 13px;
+  justify-content: space-between;
+
+  gap: 15px;
+  padding: 18px 22px;
+
+  border-bottom: 1px solid var(--rct-border);
+  background: #ffffff;
 }
 
-.modal-body {
-  padding: 0 13px;
+.rct-modal-header h2 {
+  margin: 0;
+  color: var(--rct-text);
+  font-size: 20px;
+  font-weight: 700;
 }
 
-.icon-btn {
+.rct-modal-close {
+  width: 38px;
+  height: 38px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
   border: 0;
+  border-radius: 10px;
+
   background: transparent;
-  font-size: 24px;
+  color: var(--rct-muted);
+
+  font-size: 28px;
+  line-height: 1;
+
   cursor: pointer;
+
+  transition:
+    background 0.15s ease,
+    color 0.15s ease;
 }
+
+.rct-modal-close:hover {
+  background: #f1f4f2;
+  color: var(--rct-text);
+}
+
+.rct-modal-body {
+  padding: 22px;
+
+  max-height: calc(100vh - 130px);
+  overflow-y: auto;
+
+  background: #ffffff;
+}
+
+.rct-modal-body .form-grid {
+  width: 100%;
+}
+
+@keyframes rctModalShow {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.98);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+
 
 /* =========================================================
    AUTH / LOGIN
@@ -1116,5 +1190,1263 @@ textarea:focus {
 @media (max-width: 430px) {
   .stat-grid {
     grid-template-columns: 1fr;
+  }
+}
+
+/* =========================================================
+   RCT MODERN DASHBOARD
+   STATIC STAT CARDS
+   ========================================================= */
+
+.modern-dashboard {
+  width: 100%;
+  padding-bottom: 30px;
+}
+
+/* =========================================================
+   WELCOME HEADER
+   ========================================================= */
+
+.dashboard-welcome {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 25px;
+  padding: 4px 2px 8px;
+}
+
+.welcome-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 7px 12px;
+  border-radius: 999px;
+  background: #eaf3ee;
+  color: var(--rct-green-2);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+}
+
+.dashboard-title {
+  margin: 13px 0 6px;
+  font-size: 31px;
+  line-height: 1.15;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  color: var(--rct-text);
+}
+
+.dashboard-subtitle {
+  margin: 0;
+  color: var(--rct-muted);
+  font-size: 14px;
+}
+
+.dashboard-date {
+  display: flex;
+  align-items: center;
+  white-space: nowrap;
+  padding: 10px 14px;
+  border: 1px solid var(--rct-border);
+  border-radius: 10px;
+  background: #fff;
+  color: var(--rct-muted);
+  font-size: 13px;
+  font-weight: 600;
+  box-shadow: var(--rct-shadow);
+}
+
+
+/* =========================================================
+   STATIC STAT CARDS
+   ========================================================= */
+
+.dashboard-stat-card {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 15px;
+
+  min-height: 128px;
+  padding: 20px;
+
+  background: #ffffff;
+  border: 1px solid var(--rct-border);
+  border-radius: 16px;
+
+  box-shadow: 0 6px 20px rgba(13, 59, 46, 0.06);
+
+  overflow: hidden;
+
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    border-color 0.2s ease;
+}
+
+.dashboard-stat-card::after {
+  content: "";
+  position: absolute;
+  width: 95px;
+  height: 95px;
+  right: -38px;
+  bottom: -40px;
+  border-radius: 50%;
+  background: rgba(13, 59, 46, 0.035);
+  pointer-events: none;
+}
+
+.dashboard-stat-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 30px rgba(13, 59, 46, 0.11);
+  border-color: #d6e2dc;
+}
+
+
+/* =========================================================
+   STAT ICON
+   ========================================================= */
+
+.dashboard-stat-card .stat-icon {
+  flex: 0 0 54px;
+
+  width: 54px;
+  height: 54px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 15px;
+
+  margin: 0;
+
+  font-size: 22px;
+}
+
+.dashboard-stat-card .stat-icon i {
+  line-height: 1;
+}
+
+
+/* =========================================================
+   ICON COLORS
+   ========================================================= */
+
+.dashboard-stat-card .stat-icon.green {
+  background: #e7f4ed;
+  color: #18794e;
+}
+
+.dashboard-stat-card .stat-icon.gold {
+  background: #f8efd0;
+  color: #9a7915;
+}
+
+.dashboard-stat-card .stat-icon.blue {
+  background: #e8f0ff;
+  color: #3567b8;
+}
+
+.dashboard-stat-card .stat-icon.purple {
+  background: #f0eafa;
+  color: #7652a8;
+}
+
+.dashboard-stat-card .stat-icon.orange {
+  background: #fff0df;
+  color: #b54708;
+}
+
+.dashboard-stat-card .stat-icon.teal {
+  background: #e4f5f3;
+  color: #13766e;
+}
+
+.dashboard-stat-card .stat-icon.red {
+  background: #fde8e8;
+  color: #c53030;
+}
+
+
+/* =========================================================
+   STAT CONTENT
+   ========================================================= */
+
+.dashboard-stat-card .stat-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.dashboard-stat-card .stat-content p {
+  margin: 0 0 5px;
+
+  color: var(--rct-muted);
+
+  font-size: 12px;
+  font-weight: 700;
+
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.dashboard-stat-card .stat-content h2 {
+  margin: 0;
+
+  color: var(--rct-text);
+
+  font-size: 29px;
+  line-height: 1;
+
+  font-weight: 800;
+  letter-spacing: -0.03em;
+}
+
+
+/* =========================================================
+   ARROW
+   ========================================================= */
+
+.dashboard-stat-card .stat-arrow {
+  position: absolute;
+  top: 16px;
+  right: 17px;
+
+  width: 28px;
+  height: 28px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 8px;
+
+  background: #f5f8f6;
+  color: var(--rct-muted);
+
+  font-size: 12px;
+
+  transition:
+    background 0.2s ease,
+    color 0.2s ease,
+    transform 0.2s ease;
+}
+
+.dashboard-stat-card:hover .stat-arrow {
+  background: #eaf3ee;
+  color: var(--rct-green-2);
+  transform: translate(2px, -2px);
+}
+
+
+/* =========================================================
+   DASHBOARD CONTENT CARDS
+   ========================================================= */
+
+.modern-card {
+  height: 100%;
+  background: #ffffff;
+
+  border: 1px solid var(--rct-border);
+  border-radius: 16px;
+
+  box-shadow: 0 6px 20px rgba(13, 59, 46, 0.06);
+
+  overflow: hidden;
+}
+
+.modern-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 15px;
+
+  padding: 20px 22px;
+
+  border-bottom: 1px solid var(--rct-border);
+}
+
+.modern-card-header h5 {
+  margin: 0 0 5px;
+
+  color: var(--rct-text);
+
+  font-size: 16px;
+  font-weight: 750;
+}
+
+.modern-card-header h5 i {
+  color: var(--rct-green-3);
+}
+
+.modern-card-header p {
+  margin: 0;
+
+  color: var(--rct-muted);
+
+  font-size: 12px;
+}
+
+.modern-card-body {
+  padding: 8px 22px 20px;
+}
+
+
+/* =========================================================
+   VIEW ALL BUTTON
+   ========================================================= */
+
+.view-all-btn {
+  display: inline-flex;
+  align-items: center;
+
+  white-space: nowrap;
+
+  padding: 8px 12px;
+
+  border-radius: 9px;
+
+  background: #f1f7f3;
+  color: var(--rct-green-2);
+
+  font-size: 12px;
+  font-weight: 700;
+
+  transition:
+    background 0.2s ease,
+    transform 0.2s ease;
+}
+
+.view-all-btn:hover {
+  background: #e5f0e9;
+  color: var(--rct-green-3);
+  transform: translateX(2px);
+}
+
+
+/* =========================================================
+   RECENT UPLOADS
+   ========================================================= */
+
+.upload-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.upload-item {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+
+  min-height: 72px;
+
+  padding: 12px 0;
+
+  border-bottom: 1px solid #edf0ee;
+}
+
+.upload-item:last-child {
+  border-bottom: 0;
+}
+
+.upload-file-icon {
+  flex: 0 0 42px;
+
+  width: 42px;
+  height: 42px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 11px;
+
+  background: #eef5f1;
+}
+
+.upload-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.upload-name {
+  display: block;
+
+  margin-bottom: 5px;
+
+  color: var(--rct-text);
+
+  font-size: 13px;
+  font-weight: 700;
+
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.upload-name:hover {
+  color: var(--rct-green-3);
+}
+
+.upload-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+
+  color: var(--rct-muted);
+
+  font-size: 11px;
+}
+
+.upload-meta span {
+  display: inline-flex;
+  align-items: center;
+}
+
+
+/* =========================================================
+   ACTIVITY
+   ========================================================= */
+
+.activity-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.activity-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+
+  padding: 12px 0;
+
+  border-bottom: 1px solid #edf0ee;
+}
+
+.activity-item:last-child {
+  border-bottom: 0;
+}
+
+.activity-icon {
+  flex: 0 0 38px;
+
+  width: 38px;
+  height: 38px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 11px;
+
+  background: #eaf3ee;
+  color: var(--rct-green-2);
+
+  font-size: 15px;
+}
+
+.activity-info {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.activity-info strong {
+  color: var(--rct-text);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.activity-info small {
+  margin-top: 2px;
+
+  color: var(--rct-muted);
+  font-size: 11px;
+}
+
+.activity-info span {
+  margin-top: 2px;
+
+  color: #8a9590;
+  font-size: 10px;
+}
+
+
+/* =========================================================
+   EMPTY STATE
+   ========================================================= */
+
+.empty-dashboard {
+  min-height: 180px;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  color: var(--rct-muted);
+
+  text-align: center;
+}
+
+.empty-dashboard i {
+  margin-bottom: 10px;
+
+  font-size: 32px;
+
+  color: #c9d5cf;
+}
+
+.empty-dashboard p {
+  margin: 0;
+  font-size: 13px;
+}
+
+
+/* =========================================================
+   RESPONSIVE
+   ========================================================= */
+
+@media (max-width: 1199px) {
+  .dashboard-stat-card {
+    min-height: 120px;
+  }
+}
+
+@media (max-width: 767px) {
+  .dashboard-welcome {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .dashboard-date {
+    width: 100%;
+  }
+
+  .dashboard-title {
+    font-size: 26px;
+  }
+
+  .dashboard-stat-card {
+    min-height: 116px;
+    padding: 17px;
+  }
+
+  .dashboard-stat-card .stat-icon {
+    flex-basis: 48px;
+    width: 48px;
+    height: 48px;
+    font-size: 19px;
+  }
+
+  .dashboard-stat-card .stat-content h2 {
+    font-size: 26px;
+  }
+
+  .modern-card-header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .upload-meta {
+    flex-direction: column;
+    gap: 3px;
+  }
+}
+
+@media (max-width: 480px) {
+  .dashboard-title {
+    font-size: 23px;
+  }
+
+  .dashboard-subtitle {
+    line-height: 1.5;
+  }
+
+  .dashboard-stat-card {
+    min-height: 110px;
+  }
+
+  .dashboard-stat-card .stat-arrow {
+    display: none;
+  }
+
+  .modern-card-body {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+}
+
+/* =========================================================
+   RCT LOGIN PAGE
+   ========================================================= */
+
+.rct-login-page {
+  min-height: 100vh;
+  background:
+    linear-gradient(135deg, #06281f 0%, #0d3b2e 52%, #145c43 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 30px;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Subtle decorative shapes - NO BLUR */
+.rct-login-page::before {
+  content: "";
+  position: absolute;
+  width: 420px;
+  height: 420px;
+  border: 1px solid rgba(201, 162, 39, 0.14);
+  border-radius: 50%;
+  right: -180px;
+  top: -150px;
+}
+
+.rct-login-page::after {
+  content: "";
+  position: absolute;
+  width: 300px;
+  height: 300px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 50%;
+  left: -150px;
+  bottom: -130px;
+}
+
+.rct-login-container {
+  width: 100%;
+  max-width: 1120px;
+  position: relative;
+  z-index: 2;
+}
+
+.rct-login-grid {
+  display: grid;
+  grid-template-columns: 1.05fr 0.95fr;
+  min-height: 650px;
+  background: #ffffff;
+  border-radius: 24px;
+  overflow: hidden;
+  box-shadow: 0 20px 55px rgba(0, 0, 0, 0.22);
+}
+
+/* =========================================================
+   BRAND
+   ========================================================= */
+
+.rct-login-brand {
+  padding: 55px 50px;
+  color: #ffffff;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  background:
+    linear-gradient(
+      145deg,
+      #082d23 0%,
+      #0d3b2e 55%,
+      #145c43 100%
+    );
+}
+
+.rct-logo-wrapper {
+  width: 125px;
+  height: 125px;
+  background: #ffffff;
+  border-radius: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 15px;
+  margin-bottom: 30px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.16);
+}
+
+.rct-login-logo {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.rct-brand-label {
+  display: inline-block;
+  color: #e1bf3b;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  margin-bottom: 12px;
+}
+
+.rct-brand-content h1 {
+  font-size: 42px;
+  line-height: 1.12;
+  font-weight: 800;
+  letter-spacing: -0.025em;
+  margin: 0 0 18px;
+  max-width: 520px;
+}
+
+.rct-brand-content h1 span {
+  color: #e1bf3b;
+}
+
+.rct-brand-content p {
+  color: rgba(255, 255, 255, 0.72);
+  font-size: 16px;
+  line-height: 1.7;
+  max-width: 500px;
+  margin: 0;
+}
+
+/* =========================================================
+   FEATURES
+   ========================================================= */
+
+.rct-brand-features {
+  margin-top: 35px;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.rct-feature {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+}
+
+.rct-feature-icon {
+  width: 42px;
+  height: 42px;
+  min-width: 42px;
+  border-radius: 11px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(201, 162, 39, 0.15);
+  color: #e1bf3b;
+  font-size: 18px;
+}
+
+.rct-feature strong {
+  display: block;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.rct-feature small {
+  display: block;
+  margin-top: 2px;
+  color: rgba(255, 255, 255, 0.55);
+  font-size: 11px;
+}
+
+.rct-login-footer {
+  margin-top: 38px;
+  color: rgba(255, 255, 255, 0.42);
+  font-size: 11px;
+}
+
+/* =========================================================
+   LOGIN FORM SECTION
+   ========================================================= */
+
+.rct-login-form-section {
+  background: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 50px;
+}
+
+.rct-login-card {
+  width: 100%;
+  max-width: 420px;
+}
+
+.rct-login-heading {
+  margin-bottom: 28px;
+}
+
+.rct-login-icon {
+  width: 54px;
+  height: 54px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #eaf3ee;
+  color: #145c43;
+  font-size: 23px;
+  margin-bottom: 18px;
+}
+
+.rct-login-heading h2 {
+  margin: 0 0 6px;
+  font-size: 28px;
+  font-weight: 800;
+  color: #17211e;
+}
+
+.rct-login-heading p {
+  margin: 0;
+  color: #6b7772;
+  font-size: 14px;
+}
+
+/* =========================================================
+   ERROR
+   ========================================================= */
+
+.rct-login-error {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  background: #fff0f1;
+  border: 1px solid #f5c2c7;
+  color: #842029;
+  border-radius: 10px;
+  padding: 12px 13px;
+  margin-bottom: 20px;
+  font-size: 13px;
+}
+
+.rct-login-error i {
+  margin-top: 1px;
+}
+
+/* =========================================================
+   FORM
+   ========================================================= */
+
+.rct-form-group {
+  margin-bottom: 19px;
+}
+
+.rct-form-group label {
+  display: block;
+  color: #34413c;
+  font-size: 13px;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+.rct-password-label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.rct-password-label label {
+  margin-bottom: 0;
+}
+
+.rct-password-label a {
+  font-size: 12px;
+  font-weight: 600;
+  color: #145c43;
+}
+
+.rct-password-label a:hover {
+  color: #1b7a56;
+  text-decoration: underline;
+}
+
+.rct-input-wrapper {
+  height: 50px;
+  display: flex;
+  align-items: center;
+  border: 1px solid #dfe5e2;
+  border-radius: 11px;
+  background: #ffffff;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.rct-input-wrapper:focus-within {
+  border-color: #1b7a56;
+  box-shadow: 0 0 0 3px rgba(27, 122, 86, 0.09);
+}
+
+.rct-input-wrapper > i {
+  width: 45px;
+  text-align: center;
+  color: #7a8781;
+  font-size: 16px;
+}
+
+.rct-input-wrapper input {
+  flex: 1;
+  width: auto;
+  height: 100%;
+  border: 0;
+  outline: 0;
+  padding: 0 10px 0 0;
+  box-shadow: none !important;
+  border-radius: 0;
+}
+
+.rct-input-wrapper input:focus {
+  border: 0;
+  outline: 0;
+}
+
+.rct-input-wrapper input::placeholder {
+  color: #a1aaa6;
+}
+
+/* =========================================================
+   PASSWORD BUTTON
+   ========================================================= */
+
+.rct-password-toggle {
+  width: 48px;
+  height: 100%;
+  border: 0;
+  background: transparent;
+  color: #7a8781;
+  cursor: pointer;
+  font-size: 16px;
+}
+
+.rct-password-toggle:hover {
+  color: #145c43;
+}
+
+/* =========================================================
+   LOGIN BUTTON
+   ========================================================= */
+
+.rct-login-button {
+  width: 100%;
+  min-height: 51px;
+  border: 0;
+  border-radius: 11px;
+  background: linear-gradient(
+    135deg,
+    #145c43,
+    #1b7a56
+  );
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  cursor: pointer;
+  margin-top: 25px;
+  transition:
+    transform 0.18s ease,
+    box-shadow 0.18s ease;
+  box-shadow: 0 7px 18px rgba(20, 92, 67, 0.20);
+}
+
+.rct-login-button:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 22px rgba(20, 92, 67, 0.26);
+}
+
+.rct-login-button:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.rct-login-button:disabled {
+  opacity: 0.72;
+  cursor: not-allowed;
+}
+
+/* =========================================================
+   BUTTON SPINNER
+   ========================================================= */
+
+.rct-button-spinner {
+  width: 17px;
+  height: 17px;
+  border: 2px solid rgba(255, 255, 255, 0.4);
+  border-top-color: #ffffff;
+  border-radius: 50%;
+  animation: rct-login-spin 0.7s linear infinite;
+}
+
+@keyframes rct-login-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* =========================================================
+   SECURITY NOTE
+   ========================================================= */
+
+.rct-security-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  margin-top: 28px;
+  padding-top: 20px;
+  border-top: 1px solid #edf0ee;
+  color: #7a8781;
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.rct-security-note i {
+  color: #1b7a56;
+  font-size: 14px;
+}
+
+/* Hidden on desktop */
+.rct-mobile-logo {
+  display: none;
+}
+
+/* =========================================================
+   RESPONSIVE
+   ========================================================= */
+
+@media (max-width: 900px) {
+  .rct-login-page {
+    padding: 20px;
+  }
+
+  .rct-login-grid {
+    grid-template-columns: 1fr;
+    max-width: 520px;
+    margin: auto;
+  }
+
+  .rct-login-brand {
+    display: none;
+  }
+
+  .rct-login-form-section {
+    padding: 40px 30px;
+  }
+
+  .rct-mobile-logo {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 25px;
+  }
+
+  .rct-mobile-logo img {
+    width: 95px;
+    height: 95px;
+    object-fit: contain;
+  }
+}
+
+@media (max-width: 480px) {
+  .rct-login-page {
+    padding: 12px;
+  }
+
+  .rct-login-grid {
+    border-radius: 18px;
+  }
+
+  .rct-login-form-section {
+    padding: 30px 20px;
+  }
+
+  .rct-login-heading h2 {
+    font-size: 25px;
+  }
+
+  .rct-login-card {
+    max-width: 100%;
+  }
+}
+
+/* =========================================================
+   PASSWORD VISIBILITY
+   ========================================================= */
+
+.password-field {
+  position: relative;
+  width: 100%;
+}
+
+.password-field input {
+  width: 100%;
+  padding-right: 48px;
+}
+
+.password-toggle {
+  position: absolute;
+  top: 50%;
+  right: 6px;
+  transform: translateY(-50%);
+
+  width: 38px;
+  height: 38px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  border: 0;
+  border-radius: 9px;
+
+  background: transparent;
+  color: var(--rct-muted);
+
+  cursor: pointer;
+  z-index: 5;
+
+  transition:
+    background 0.18s ease,
+    color 0.18s ease;
+}
+
+.password-toggle:hover {
+  background: #eaf3ee;
+  color: var(--rct-green-2);
+}
+
+.password-toggle:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(27, 122, 86, 0.12);
+}
+
+.password-toggle i {
+  font-size: 18px;
+}
+
+/* =========================================================
+   PASSWORD SECTION
+   ========================================================= */
+
+.password-section {
+  margin-top: 24px;
+  padding-top: 22px;
+  border-top: 1px solid var(--rct-border);
+}
+
+.password-section-header {
+  margin-bottom: 16px;
+}
+
+.password-section-header h3 {
+  margin: 0 0 5px;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--rct-text);
+}
+
+.password-section-header h3 i {
+  color: var(--rct-green-2);
+}
+
+.password-section-header p {
+  margin: 0;
+  font-size: 13px;
+  color: var(--rct-muted);
+}
+
+/* =========================================================
+   USER STATUS
+   ========================================================= */
+
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+
+  padding: 5px 10px;
+
+  border-radius: 999px;
+
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.status-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+}
+
+.status-active {
+  background: #e7f6ed;
+  color: #176b43;
+}
+
+.status-active .status-dot {
+  background: #23945f;
+}
+
+.status-inactive {
+  background: #fbe9ea;
+  color: #a12632;
+}
+
+.status-inactive .status-dot {
+  background: #dc3545;
+}
+
+/* =========================================================
+   USER TABLE ACTIONS
+   ========================================================= */
+
+.row-actions {
+  display: flex;
+  gap: 7px;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+}
+
+.row-actions .btn {
+  white-space: nowrap;
+}
+
+/* =========================================================
+   MODAL FORM IMPROVEMENT
+   ========================================================= */
+
+.modal-body .form-grid {
+  margin-top: 4px;
+}
+
+.modal-body label {
+  min-width: 0;
+}
+
+.modal-body input,
+.modal-body select {
+  min-height: 44px;
+}
+
+.modal-body .form-actions {
+  margin-top: 5px;
+}
+
+.modal-body .btn {
+  min-height: 42px;
+}
+
+/* =========================================================
+   MOBILE PASSWORD FIELD
+   ========================================================= */
+
+@media (max-width: 680px) {
+  .password-toggle {
+    right: 5px;
+  }
+
+  .password-field input {
+    padding-right: 45px;
+  }
+
+  .row-actions {
+    justify-content: flex-start;
   }
 }

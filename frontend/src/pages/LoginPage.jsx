@@ -3,6 +3,7 @@ import { Link, Navigate, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { useToast } from "../context/ToastContext";
 import { API_URL } from "../services/api";
+import rctLogo from "../assets/rct-logo.png";
 
 export default function LoginPage() {
   const { user, login } = useAuth();
@@ -17,7 +18,6 @@ export default function LoginPage() {
   const [error, setError] = useState("");
 
   useEffect(() => {
-    // Wake the Render free-tier API before the user submits.
     fetch(`${API_URL}/api/health`).catch(() => {});
   }, []);
 
@@ -67,201 +67,228 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="auth-screen">
-      <div className="container">
-        <div className="row justify-content-center align-items-center min-vh-100">
-          <div className="col-12 col-md-10 col-lg-8">
-            <div className="row g-4 align-items-center">
+    <div className="rct-login-page">
+      <div className="rct-login-container">
+        <div className="rct-login-grid">
 
-              {/* RCT BRAND */}
-              <div className="col-12 col-lg-6 text-white">
-                <div className="text-center text-lg-start">
-                  <div
-                    className="d-inline-flex align-items-center justify-content-center rounded-4 shadow mb-3"
-                    style={{
-                      width: "90px",
-                      height: "90px",
-                      background: "#c9a227",
-                      color: "#0d3b2e",
-                      fontSize: "28px",
-                      fontWeight: "800",
-                    }}
-                  >
-                    RCT
-                  </div>
+          {/* =========================
+              LEFT BRAND SECTION
+          ========================== */}
+          <section className="rct-login-brand">
 
-                  <h1 className="fw-bold mb-2">
-                    Rice Council of Tanzania
-                  </h1>
+            <div className="rct-logo-wrapper">
+              <img
+                src={rctLogo}
+                alt="Rice Council of Tanzania"
+                className="rct-login-logo"
+              />
+            </div>
 
-                  <p className="lead opacity-75 mb-0">
-                    Secure folder and document management
-                    for authorized staff.
-                  </p>
+            <div className="rct-brand-content">
+              <span className="rct-brand-label">
+                RICE COUNCIL OF TANZANIA
+              </span>
+
+              <h1>
+                Document Management
+                <span> System</span>
+              </h1>
+
+              <p>
+                A secure and centralized platform for managing
+                organizational folders, documents, users and access.
+              </p>
+            </div>
+
+            <div className="rct-brand-features">
+              <div className="rct-feature">
+                <div className="rct-feature-icon">
+                  <i className="bi bi-shield-check"></i>
+                </div>
+
+                <div>
+                  <strong>Secure Access</strong>
+                  <small>Protected organizational information</small>
                 </div>
               </div>
 
-              {/* LOGIN CARD */}
-              <div className="col-12 col-lg-6">
-                <div className="card border-0 shadow-lg rounded-4">
-                  <div className="card-body p-4 p-md-5">
+              <div className="rct-feature">
+                <div className="rct-feature-icon">
+                  <i className="bi bi-folder2-open"></i>
+                </div>
 
-                    <div className="text-center mb-4">
-                      <div
-                        className="rounded-circle d-inline-flex align-items-center justify-content-center mb-3"
-                        style={{
-                          width: "60px",
-                          height: "60px",
-                          background: "#eaf3ee",
-                          color: "#145c43",
-                        }}
-                      >
-                        <i className="bi bi-person-lock fs-3"></i>
-                      </div>
+                <div>
+                  <strong>Centralized Documents</strong>
+                  <small>Organize and manage files efficiently</small>
+                </div>
+              </div>
 
-                      <h2 className="fw-bold mb-1">
-                        Sign in
-                      </h2>
+              <div className="rct-feature">
+                <div className="rct-feature-icon">
+                  <i className="bi bi-people"></i>
+                </div>
 
-                      <p className="text-muted mb-0">
-                        Access your RCT account
-                      </p>
-                    </div>
+                <div>
+                  <strong>Staff Management</strong>
+                  <small>Manage users, roles and permissions</small>
+                </div>
+              </div>
+            </div>
 
-                    {/* ERROR MESSAGE */}
-                    {error && (
-                      <div
-                        className="alert alert-danger d-flex align-items-center"
-                        role="alert"
-                      >
-                        <i className="bi bi-exclamation-circle-fill me-2"></i>
-                        <span>{error}</span>
-                      </div>
-                    )}
+            <div className="rct-login-footer">
+              © {new Date().getFullYear()} Rice Council of Tanzania
+            </div>
+          </section>
 
-                    <form onSubmit={onSubmit} noValidate>
+          {/* =========================
+              RIGHT LOGIN SECTION
+          ========================== */}
+          <section className="rct-login-form-section">
 
-                      {/* EMAIL */}
-                      <div className="mb-3">
-                        <label className="form-label fw-semibold">
-                          Organizational email
-                        </label>
+            <div className="rct-login-card">
 
-                        <div className="input-group">
-                          <span className="input-group-text bg-white">
-                            <i className="bi bi-envelope"></i>
-                          </span>
+              <div className="rct-mobile-logo">
+                <img
+                  src={rctLogo}
+                  alt="RCT Logo"
+                />
+              </div>
 
-                          <input
-                            type="email"
-                            className="form-control"
-                            value={email}
-                            onChange={(e) => {
-                              setEmail(e.target.value);
-                              if (error) setError("");
-                            }}
-                            placeholder="Enter your email"
-                            autoComplete="username"
-                            disabled={busy}
-                            required
-                          />
-                        </div>
-                      </div>
+              <div className="rct-login-heading">
+                <div className="rct-login-icon">
+                  <i className="bi bi-person-lock"></i>
+                </div>
 
-                      {/* PASSWORD */}
-                      <div className="mb-3">
-                        <label className="form-label fw-semibold">
-                          Password
-                        </label>
+                <h2>Welcome back</h2>
 
-                        <div className="input-group">
-                          <span className="input-group-text bg-white">
-                            <i className="bi bi-lock"></i>
-                          </span>
+                <p>
+                  Sign in to access your account
+                </p>
+              </div>
 
-                          <input
-                            type={showPassword ? "text" : "password"}
-                            className="form-control"
-                            value={password}
-                            onChange={(e) => {
-                              setPassword(e.target.value);
-                              if (error) setError("");
-                            }}
-                            placeholder="Enter your password"
-                            autoComplete="current-password"
-                            disabled={busy}
-                            required
-                          />
+              {error && (
+                <div className="rct-login-error" role="alert">
+                  <i className="bi bi-exclamation-circle-fill"></i>
+                  <span>{error}</span>
+                </div>
+              )}
 
-                          <button
-                            type="button"
-                            className="btn btn-outline-secondary"
-                            onClick={() =>
-                              setShowPassword((prev) => !prev)
-                            }
-                            disabled={busy}
-                            aria-label={
-                              showPassword
-                                ? "Hide password"
-                                : "Show password"
-                            }
-                            title={
-                              showPassword
-                                ? "Hide password"
-                                : "Show password"
-                            }
-                          >
-                            <i
-                              className={
-                                showPassword
-                                  ? "bi bi-eye-slash"
-                                  : "bi bi-eye"
-                              }
-                            ></i>
-                          </button>
-                        </div>
-                      </div>
+              <form onSubmit={onSubmit} noValidate>
 
-                      {/* SUBMIT */}
-                      <button
-                        type="submit"
-                        className="btn btn-success w-100 py-2 fw-semibold"
-                        disabled={busy}
-                      >
-                        {busy ? (
-                          <>
-                            <span
-                              className="spinner-border spinner-border-sm me-2"
-                              role="status"
-                              aria-hidden="true"
-                            ></span>
-                            Signing in...
-                          </>
-                        ) : (
-                          <>
-                            <i className="bi bi-box-arrow-in-right me-2"></i>
-                            Sign in
-                          </>
-                        )}
-                      </button>
+                {/* EMAIL */}
+                <div className="rct-form-group">
+                  <label htmlFor="login-email">
+                    Organizational email
+                  </label>
 
-                      {/* FORGOT PASSWORD */}
-                      <div className="text-center mt-3">
-                        <Link
-                          to="/forgot-password"
-                          className="text-decoration-none"
-                        >
-                          Forgot password?
-                        </Link>
-                      </div>
+                  <div className="rct-input-wrapper">
+                    <i className="bi bi-envelope"></i>
 
-                    </form>
+                    <input
+                      id="login-email"
+                      type="email"
+                      value={email}
+                      onChange={(e) => {
+                        setEmail(e.target.value);
+                        if (error) setError("");
+                      }}
+                      placeholder="Enter your email"
+                      autoComplete="username"
+                      disabled={busy}
+                      required
+                    />
                   </div>
                 </div>
+
+                {/* PASSWORD */}
+                <div className="rct-form-group">
+                  <div className="rct-password-label">
+                    <label htmlFor="login-password">
+                      Password
+                    </label>
+
+                    <Link to="/forgot-password">
+                      Forgot password?
+                    </Link>
+                  </div>
+
+                  <div className="rct-input-wrapper">
+                    <i className="bi bi-lock"></i>
+
+                    <input
+                      id="login-password"
+                      type={showPassword ? "text" : "password"}
+                      value={password}
+                      onChange={(e) => {
+                        setPassword(e.target.value);
+                        if (error) setError("");
+                      }}
+                      placeholder="Enter your password"
+                      autoComplete="current-password"
+                      disabled={busy}
+                      required
+                    />
+
+                    <button
+                      type="button"
+                      className="rct-password-toggle"
+                      onClick={() =>
+                        setShowPassword((prev) => !prev)
+                      }
+                      disabled={busy}
+                      aria-label={
+                        showPassword
+                          ? "Hide password"
+                          : "Show password"
+                      }
+                    >
+                      <i
+                        className={
+                          showPassword
+                            ? "bi bi-eye-slash"
+                            : "bi bi-eye"
+                        }
+                      ></i>
+                    </button>
+                  </div>
+                </div>
+
+                {/* LOGIN BUTTON */}
+                <button
+                  type="submit"
+                  className="rct-login-button"
+                  disabled={busy}
+                >
+                  {busy ? (
+                    <>
+                      <span
+                        className="rct-button-spinner"
+                        aria-hidden="true"
+                      ></span>
+
+                      Signing in...
+                    </>
+                  ) : (
+                    <>
+                      <span>Sign in to your account</span>
+                      <i className="bi bi-arrow-right"></i>
+                    </>
+                  )}
+                </button>
+              </form>
+
+              <div className="rct-security-note">
+                <i className="bi bi-shield-lock-fill"></i>
+
+                <span>
+                  Your account and organizational data are protected
+                  by secure authentication.
+                </span>
               </div>
 
             </div>
-          </div>
+          </section>
+
         </div>
       </div>
     </div>
