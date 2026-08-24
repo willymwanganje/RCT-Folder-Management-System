@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { api, fileUrl } from "../services/api";
+import { api } from "../services/api";
 import { useAuth } from "../context/AuthContext";
 import { useToast } from "../context/ToastContext";
 import Avatar from "../components/Avatar";
@@ -33,7 +33,9 @@ export default function DocumentDetailsPage() {
   if (!doc) return <Spinner />;
 
   const previewable = PREVIEW.includes(doc.fileType);
-  const src = fileUrl(doc.storageUrl);
+
+  // Tumia previewUrl (signed URL kutoka Supabase) inayotoka backend
+  const src = doc.previewUrl || null;
 
   async function save(e) {
     e.preventDefault();
@@ -85,15 +87,25 @@ export default function DocumentDetailsPage() {
       <div className="split">
         <section className="card">
           <h2>Preview</h2>
-          {previewable && doc.fileType === "pdf" && <iframe className="preview" title="preview" src={src} />}
-          {previewable && ["jpg", "jpeg", "png"].includes(doc.fileType) && (
-            <img className="preview-img" src={src} alt={doc.name} />
-          )}
-          {previewable && doc.fileType === "txt" && <iframe className="preview" title="preview" src={src} />}
-          {!previewable && (
-            <p className="muted">Preview is not available for this file type. Download the file to view it.</p>
+          {previewable && src ? (
+            <>
+              {doc.fileType === "pdf" && (
+                <iframe className="preview" title="preview" src={src} />
+              )}
+              {["jpg", "jpeg", "png"].includes(doc.fileType) && (
+                <img className="preview-img" src={src} alt={doc.name} />
+              )}
+              {doc.fileType === "txt" && (
+                <iframe className="preview" title="preview" src={src} />
+              )}
+            </>
+          ) : (
+            <p className="muted">
+              Preview is not available for this file type. Download the file to view it.
+            </p>
           )}
         </section>
+
         <section className="card">
           <div className="uploader-block">
             <Avatar user={doc.uploadedBy} size={48} />
