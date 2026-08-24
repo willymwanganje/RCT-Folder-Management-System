@@ -1,9 +1,6 @@
-const fs = require("fs/promises");
-const path = require("path");
 const crypto = require("crypto");
+const { createClient } = require("@supabase/supabase-js");
 const { env } = require("../config/env");
-
-const LOCAL_DIR = path.join(__dirname, "../../uploads");
 
 const MIME_BY_EXT = {
   pdf: "application/pdf",
@@ -20,84 +17,152 @@ const MIME_BY_EXT = {
   png: "image/png",
 };
 
-async function saveLocal(buffer, folder, ext) {
-  const dir = path.join(LOCAL_DIR, folder);
-  await fs.mkdir(dir, { recursive: true });
-  const key = `${folder}/${crypto.randomUUID()}.${ext}`;
-  await fs.writeFile(path.join(LOCAL_DIR, key), buffer);
+const SUPABASE_BUCKET = env.supabase.bucket || "rct-documents";
+
+let supabase;
+
+function getSupabase() {
+  if (!supabase) {
+    if (!env.supabase.url || !env.supabase.serviceRoleKey) {
+      throw new Error("Supabase storage credentials are not configured");
+    }
+
+    supabase = createClient(
+      env.supabase.url,
+      env.supabase.serviceRoleKey,
+      {
+        auth: {
+          autoRefreshToken: false,
+          persistSession: false,
+        },
+      }
+    );
+  }
+
+  return supabase;
+}
+
+/**
+ * Upload file to Supabase private bucket.
+ */
+async function saveSupabase(buffer, folder, ext, mimeType) {
+  const client = getSupabase();
+
+  const filename = `${crypto.randomUUID()}.${ext}`;
+  const key = `${folder}/${filename}`;
+
+  const { error } = await client.storage
+    .from(SUPABASE_BUCKET)
+    .upload(key, buffer, {
+      contentType:
+        mimeType ||
+        MIME_BY_EXT[ext] ||
+        "application/octet-stream",
+      upsert: false,
+    });
+
+  if (error) {
+    throw new Error(
+      `Supabase upload failed: ${error.message}`
+    );
+  }
+
   return {
-    provider: "local",
+    provider: "supabase",
     key,
-    url: `/uploads/${key}`,
+    url: key,
   };
 }
 
-async function removeLocal(key) {
-  try {
-    await fs.unlink(path.join(LOCAL_DIR, key));
-  } catch (err) {
-    if (err.code !== "ENOENT") throw err;
-  }
-}
+/**
+ * Delete file from Supabase private bucket.
+ */
+async function removeSupabase(key) {
+  if (!key) return;
 
-let cloudinary;
-function getCloudinary() {
-  if (!cloudinary) {
-    cloudinary = require("cloudinary").v2;
-    cloudinary.config({
-      cloud_name: env.cloudinary.cloudName,
-      api_key: env.cloudinary.apiKey,
-      api_secret: env.cloudinary.apiSecret,
-    });
-  }
-  return cloudinary;
-}
+  const client = getSupabase();
 
-function saveCloudinary(buffer, folder, ext) {
-  const cld = getCloudinary();
-  return new Promise((resolve, reject) => {
-    const stream = cld.uploader.upload_stream(
-      {
-        folder: `rct-folder-management/${folder}`,
-        resource_type: "auto",
-        filename_override: `${crypto.randomUUID()}.${ext}`,
-        use_filename: true,
-        unique_filename: true,
-      },
-      (error, result) => {
-        if (error) return reject(error);
-        resolve({
-          provider: "cloudinary",
-          key: result.public_id,
-          url: result.secure_url,
-        });
-      }
+  const { error } = await client.storage
+    .from(SUPABASE_BUCKET)
+    .remove([key]);
+
+  if (error) {
+    throw new Error(
+      `Supabase delete failed: ${error.message}`
     );
-    stream.end(buffer);
-  });
-}
-
-async function removeCloudinary(key) {
-  const cld = getCloudinary();
-  await cld.uploader.destroy(key, { resource_type: "image" }).catch(() => {});
-  await cld.uploader.destroy(key, { resource_type: "raw" }).catch(() => {});
-}
-
-async function saveFile(buffer, { folder, ext }) {
-  const provider = env.storageProvider;
-  if (provider === "cloudinary") {
-    if (!env.cloudinary.cloudName || !env.cloudinary.apiKey || !env.cloudinary.apiSecret) {
-      throw new Error("Cloudinary credentials are not configured");
-    }
-    return saveCloudinary(buffer, folder, ext);
   }
-  return saveLocal(buffer, folder, ext);
 }
 
+/**
+ * Generate temporary signed URL for private file.
+ *
+ * expiresIn = seconds.
+ */
+async function createSignedDownloadUrl(
+  key,
+  expiresIn = 600
+) {
+  if (!key) {
+    throw new Error("Storage key is required");
+  }
+
+  const client = getSupabase();
+
+  const { data, error } = await client.storage
+    .from(SUPABASE_BUCKET)
+    .createSignedUrl(key, expiresIn);
+
+  if (error) {
+    throw new Error(
+      `Supabase signed URL failed: ${error.message}`
+    );
+  }
+
+  if (!data || !data.signedUrl) {
+    throw new Error(
+      "Supabase did not return a signed URL"
+    );
+  }
+
+  return data.signedUrl;
+}
+
+/**
+ * Main file upload function.
+ */
+async function saveFile(
+  buffer,
+  { folder, ext, mimeType }
+) {
+  return saveSupabase(
+    buffer,
+    folder,
+    ext,
+    mimeType
+  );
+}
+
+/**
+ * Main file delete function.
+ */
 async function removeFile(provider, key) {
   if (!key) return;
-  if (provider === "cloudinary") return removeCloudinary(key);
-  return removeLocal(key);
+
+  if (provider === "supabase") {
+    return removeSupabase(key);
+  }
+
+  /*
+   * Old local/cloudinary files are intentionally
+   * not deleted by the new Supabase storage layer.
+   *
+   * This protects existing files during migration.
+   */
 }
 
-module.exports = { saveFile, removeFile, MIME_BY_EXT, LOCAL_DIR };
+module.exports = {
+  saveFile,
+  removeFile,
+  createSignedDownloadUrl,
+  MIME_BY_EXT,
+};
