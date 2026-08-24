@@ -2,6 +2,7 @@ const prisma = require("../config/prisma");
 const ApiError = require("../utils/ApiError");
 const { getEffectivePermissions } = require("./rbacService");
 const { ROLE_SLUGS } = require("../config/permissions");
+const { createSignedDownloadUrl } = require("./storageService");
 
 const userSafeInclude = {
   role: {
@@ -41,7 +42,25 @@ async function findUserById(id) {
 async function toPublicUser(user) {
   if (!user) return null;
   const permissions = await getEffectivePermissions(user);
-  return stripSecrets(user, permissions);
+  const publicUser = stripSecrets(user, permissions);
+
+  // Generate signed URL kwa profile photo
+  if (
+    publicUser.profilePhotoUrl &&
+    !publicUser.profilePhotoUrl.startsWith("http")
+  ) {
+    try {
+      publicUser.profilePhotoUrl = await createSignedDownloadUrl(
+        publicUser.profilePhotoUrl,
+        60 * 60 // saa 1
+      );
+    } catch (err) {
+      console.error("Failed to generate signed URL for avatar:", err.message);
+      publicUser.profilePhotoUrl = null;
+    }
+  }
+
+  return publicUser;
 }
 
 function assertNotPrimarySuperAdmin(target, actionLabel) {

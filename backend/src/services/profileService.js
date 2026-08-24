@@ -26,15 +26,23 @@ async function updatePhoto({ userId, file, ip }) {
   if (!["jpg", "jpeg", "png"].includes(ext)) {
     throw new ApiError(400, "Profile photo must be JPG or PNG");
   }
+
   const user = await prisma.user.findUnique({ where: { id: userId } });
+
+  // Save file kwenye Supabase - returns { provider, key, url }
   const stored = await saveFile(file.buffer, { folder: "avatars", ext });
+
+  // Hifadhi key ndogo tu kwenye database (si URL kamili)
   await prisma.user.update({
     where: { id: userId },
-    data: { profilePhotoUrl: stored.url },
+    data: { profilePhotoUrl: stored.key },
   });
+
+  // Futa picha ya zamani kama ilikuwa local
   if (user.profilePhotoUrl && user.profilePhotoUrl.startsWith("/uploads/")) {
     await removeFile("local", user.profilePhotoUrl.replace("/uploads/", ""));
   }
+
   await writeAudit({
     actorId: userId,
     action: "user.photo_update",
@@ -42,15 +50,23 @@ async function updatePhoto({ userId, file, ip }) {
     resourceId: userId,
     ipAddress: ip,
   });
+
   return toPublicUser(await findUserById(userId));
 }
 
 async function removePhoto({ userId, ip }) {
   const user = await prisma.user.findUnique({ where: { id: userId } });
+
+  // Futa picha ya zamani kama ilikuwa local
   if (user.profilePhotoUrl && user.profilePhotoUrl.startsWith("/uploads/")) {
     await removeFile("local", user.profilePhotoUrl.replace("/uploads/", ""));
   }
-  await prisma.user.update({ where: { id: userId }, data: { profilePhotoUrl: null } });
+
+  await prisma.user.update({
+    where: { id: userId },
+    data: { profilePhotoUrl: null },
+  });
+
   await writeAudit({
     actorId: userId,
     action: "user.photo_remove",
@@ -58,6 +74,7 @@ async function removePhoto({ userId, ip }) {
     resourceId: userId,
     ipAddress: ip,
   });
+
   return toPublicUser(await findUserById(userId));
 }
 
