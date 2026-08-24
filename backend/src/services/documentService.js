@@ -2,7 +2,7 @@ const path = require("path");
 const prisma = require("../config/prisma");
 const ApiError = require("../utils/ApiError");
 const { writeAudit } = require("./auditService");
-const { saveFile, removeFile, MIME_BY_EXT } = require("./storageService");
+const { saveFile, removeFile, MIME_BY_EXT, createSignedDownloadUrl } = require("./storageService");
 const { getSettings } = require("./settingsService");
 
 function extensionOf(filename) {
@@ -56,6 +56,42 @@ function buildWhere(query, { mine, userId } = {}) {
   return where;
 }
 
+// Generate signed URLs kwa document na uploader photo
+async function enrichDocument(doc) {
+  if (!doc) return null;
+
+  // Signed URL kwa preview ya document (picha/pdf)
+  if (
+    doc.storageKey &&
+    doc.storageProvider === "supabase"
+  ) {
+    try {
+      doc.previewUrl = await createSignedDownloadUrl(doc.storageKey, 60 * 60);
+    } catch (err) {
+      console.error("Failed to generate preview URL:", err.message);
+      doc.previewUrl = null;
+    }
+  }
+
+  // Signed URL kwa profile photo ya uploader
+  if (
+    doc.uploadedBy?.profilePhotoUrl &&
+    !doc.uploadedBy.profilePhotoUrl.startsWith("http")
+  ) {
+    try {
+      doc.uploadedBy.profilePhotoUrl = await createSignedDownloadUrl(
+        doc.uploadedBy.profilePhotoUrl,
+        60 * 60
+      );
+    } catch (err) {
+      console.error("Failed to generate uploader avatar URL:", err.message);
+      doc.uploadedBy.profilePhotoUrl = null;
+    }
+  }
+
+  return doc;
+}
+
 async function listDocuments(query, opts) {
   const page = Number(query.page) || 1;
   const pageSize = Number(query.pageSize) || 20;
@@ -70,7 +106,11 @@ async function listDocuments(query, opts) {
       take: pageSize,
     }),
   ]);
-  return { data, meta: { total, page, pageSize } };
+
+  // Enrich documents zote na signed URLs
+  const enriched = await Promise.all(data.map(enrichDocument));
+
+  return { data: enriched, meta: { total, page, pageSize } };
 }
 
 async function getDocument(id) {
@@ -79,7 +119,7 @@ async function getDocument(id) {
     include: documentInclude(),
   });
   if (!doc) throw new ApiError(404, "Document not found");
-  return doc;
+  return enrichDocument(doc);
 }
 
 async function createDocument({ file, body, actor, ip }) {
@@ -118,18 +158,19 @@ async function createDocument({ file, body, actor, ip }) {
     ipAddress: ip,
     metadata: { name: doc.name, fileType: ext },
   });
-  return doc;
+  return enrichDocument(doc);
 }
 
 async function updateDocument({ id, payload, actor, ip }) {
-  const existing = await getDocument(id);
+  const existing = await prisma.document.findUnique({ where: { id } });
+  if (!existing) throw new ApiError(404, "Document not found");
   const data = {};
   if (payload.name) data.name = payload.name.trim();
   if (payload.description !== undefined) data.description = payload.description;
   if (payload.categoryId) data.categoryId = payload.categoryId;
   if (payload.folderId) data.folderId = payload.folderId;
   const doc = await prisma.document.update({
-    where: { id: existing.id },
+    where: { id },
     data,
     include: documentInclude(),
   });
@@ -140,11 +181,12 @@ async function updateDocument({ id, payload, actor, ip }) {
     resourceId: id,
     ipAddress: ip,
   });
-  return doc;
+  return enrichDocument(doc);
 }
 
 async function deleteDocument({ id, actor, ip }) {
-  const existing = await getDocument(id);
+  const existing = await prisma.document.findUnique({ where: { id } });
+  if (!existing) throw new ApiError(404, "Document not found");
   await prisma.document.delete({ where: { id } });
   await removeFile(existing.storageProvider, existing.storageKey);
   await writeAudit({
@@ -158,7 +200,11 @@ async function deleteDocument({ id, actor, ip }) {
 }
 
 async function recordDownload({ id, actor, ip }) {
-  const doc = await getDocument(id);
+  const doc = await prisma.document.findUnique({
+    where: { id },
+    include: documentInclude(),
+  });
+  if (!doc) throw new ApiError(404, "Document not found");
   await writeAudit({
     actorId: actor.id,
     action: "document.download",
