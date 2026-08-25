@@ -3,7 +3,7 @@ import { Link, Navigate, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { useToast } from "../context/ToastContext";
 import { API_URL } from "../services/api";
-import rctLogo from "../assets/rct-logo.png";
+import rctLogo from "../assets/rct-logo.jpg";
 
 export default function LoginPage() {
   const { user, login } = useAuth();

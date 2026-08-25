@@ -1,0 +1,129 @@
+/* =========================================================
+   RCT CLEAN SIDEBAR
+   Use after the main App.css so these rules override older sidebar styles.
+   ========================================================= */
+
+.sidebar {
+  width: 248px;
+  min-width: 248px;
+  padding: 18px 12px;
+  background: linear-gradient(180deg, #0b1d3a 0%, #07152d 100%);
+  border-right: 1px solid rgba(99, 179, 255, .16);
+  box-shadow: 10px 0 32px rgba(1, 12, 35, .18);
+}
+
+.brand-clean {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 78px;
+  padding: 8px 6px 18px;
+  margin-bottom: 18px;
+  border-bottom: 1px solid rgba(99, 179, 255, .14);
+}
+
+.brand-clean .brand-logo {
+  display: block;
+  width: min(190px, 100%);
+  height: auto;
+  max-height: 58px;
+  object-fit: contain;
+  object-position: center;
+  padding: 6px 10px;
+  border-radius: 12px;
+  background: #ffffff;
+  box-shadow: 0 8px 22px rgba(2, 18, 55, .22);
+}
+
+.sidebar-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.sidebar-link {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 44px;
+  padding: 10px 13px;
+  border: 1px solid transparent;
+  border-radius: 11px;
+  color: #a9bddb;
+  font-size: 13.5px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: color .2s ease, background .2s ease, border-color .2s ease, transform .2s ease;
+}
+
+.sidebar-link i {
+  width: 20px;
+  color: #7896bd;
+  font-size: 17px;
+  text-align: center;
+  transition: color .2s ease, transform .2s ease;
+}
+
+.sidebar-link:hover {
+  color: #f0f6ff;
+  background: rgba(47, 128, 255, .10);
+  border-color: rgba(99, 179, 255, .16);
+  transform: translateX(2px);
+}
+
+.sidebar-link:hover i {
+  color: #66a6ff;
+  transform: scale(1.08);
+}
+
+.sidebar-link.active {
+  color: #ffffff;
+  background: linear-gradient(90deg, rgba(47, 128, 255, .30), rgba(47, 128, 255, .10));
+  border-color: rgba(99, 179, 255, .34);
+  box-shadow: inset 3px 0 0 #3b8cff, 0 8px 18px rgba(5, 47, 117, .18);
+}
+
+.sidebar-link.active i {
+  color: #66a6ff;
+}
+
+.sidebar-link:focus-visible {
+  outline: 3px solid rgba(102, 166, 255, .32);
+  outline-offset: 2px;
+}
+
+@media (max-width: 900px) {
+  .sidebar {
+    width: 230px;
+    min-width: 230px;
+  }
+
+  .brand-clean .brand-logo {
+    width: 175px;
+  }
+}
+
+@media (max-width: 768px) {
+  .sidebar {
+    position: fixed;
+    left: 0;
+    top: 0;
+    height: 100vh;
+    transform: translateX(-105%);
+    transition: transform .25s ease, box-shadow .25s ease;
+  }
+
+  .sidebar.open {
+    transform: translateX(0);
+    box-shadow: 18px 0 42px rgba(1, 12, 35, .45);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sidebar-link,
+  .sidebar-link i,
+  .sidebar { transition: none; }
+}
+
+/* End of clean sidebar */

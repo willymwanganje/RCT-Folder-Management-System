@@ -16,6 +16,7 @@ import RolesPage from "./pages/RolesPage";
 import AuditLogsPage from "./pages/AuditLogsPage";
 import ProfilePage from "./pages/ProfilePage";
 import SettingsPage from "./pages/SettingsPage";
+import "./App.css";
 
 export default function App() {
   return (
