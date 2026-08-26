@@ -1,0 +1,26 @@
+/* Full-page folder details mode */
+.folders-layout.folder-detail-only {
+  display: block;
+  width: 100%;
+}
+
+.folder-details-card.folder-details-full {
+  width: 100%;
+  min-height: 520px;
+  box-sizing: border-box;
+}
+
+.folder-details-full .folder-detail-head {
+  padding: 8px 0 22px;
+}
+
+.folder-details-full .folder-detail-list,
+.folder-details-full .folder-file-list {
+  max-width: 100%;
+}
+
+@media (max-width: 640px) {
+  .folder-details-card.folder-details-full {
+    min-height: 420px;
+  }
+}

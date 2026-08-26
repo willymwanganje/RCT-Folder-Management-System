@@ -19,6 +19,8 @@ import SettingsPage from "./pages/SettingsPage";
 import "./App.css";
 import "./Categories_cards.css";
 import "./Folders_cards.css";
+import "./Folder_full_page.css";
+
 
 export default function App() {
   return (

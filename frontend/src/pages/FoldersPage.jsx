@@ -234,7 +234,8 @@ export default function FoldersPage() {
         )}
       </div>
 
-      <div className="folders-layout">
+      <div className={`folders-layout ${id ? "folder-detail-only" : ""}`}>
+        {!id && (
         <section className="card folder-library-card">
           <div className="folder-section-heading">
             <div>
@@ -263,8 +264,9 @@ export default function FoldersPage() {
             </div>
           )}
         </section>
+        )}
 
-        <section className="card folder-details-card">
+        <section className={`card folder-details-card ${id ? "folder-details-full" : ""}`}>
           {loadingFolder ? (
             <EmptyState title="Loading folder" hint="Retrieving files from the server..." />
           ) : !folder ? (
