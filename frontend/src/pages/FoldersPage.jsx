@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import { api } from "../services/api";
 import { useAuth } from "../context/AuthContext";
 import { useToast } from "../context/ToastContext";
@@ -34,24 +34,15 @@ function filterByCategory(nodes, categoryId) {
 }
 
 function FolderCard({ folder, categoryId, depth = 0 }) {
-  const navigate = useNavigate();
-
   const href = categoryId
     ? `/categories/${categoryId}/folders/${folder.id}`
     : `/folders/${folder.id}`;
 
-  function openFolder(event) {
-    event.preventDefault();
-    event.stopPropagation();
-    navigate(href);
-  }
-
   return (
     <div className="folder-card-wrap" style={{ marginLeft: depth ? 18 : 0 }}>
-      <a
-        href={href}
+      <Link
         className="folder-card"
-        onClick={openFolder}
+        to={href}
         aria-label={`Open folder ${folder.name}`}
       >
         <div className="folder-card-icon">
@@ -81,7 +72,7 @@ function FolderCard({ folder, categoryId, depth = 0 }) {
         <span className="folder-card-open">
           Open <i className="bi bi-arrow-right" aria-hidden="true" />
         </span>
-      </a>
+      </Link>
 
       {folder.children?.length > 0 && (
         <div className="nested-folder-cards">
