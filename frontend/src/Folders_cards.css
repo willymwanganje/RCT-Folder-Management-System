@@ -1,0 +1,173 @@
+/* =========================================================
+   CLICKABLE FOLDER CARD UI
+   Add after App.css and after any old folder styles.
+   ========================================================= */
+
+.folders-page { width: 100%; }
+.folders-page-head { align-items: flex-end; margin-bottom: 28px; }
+
+.folders-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) minmax(320px, .85fr);
+  gap: 18px;
+  align-items: start;
+}
+
+.folder-library-card,
+.folder-details-card {
+  min-width: 0;
+  border: 1px solid rgba(99, 179, 255, .19);
+  border-radius: 18px;
+  background: linear-gradient(145deg, rgba(14, 36, 73, .94), rgba(8, 23, 49, .97));
+  box-shadow: 0 14px 32px rgba(1, 13, 38, .22), inset 0 1px 0 rgba(255,255,255,.04);
+}
+
+.folder-section-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 18px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid rgba(99, 179, 255, .13);
+}
+
+.folder-section-heading h2 {
+  margin: 0 0 4px;
+  color: #eef5ff;
+  font-size: 17px;
+}
+
+.folder-section-heading h2 i { color: #4e9cff; }
+.folder-section-heading p { margin: 0; color: #829abd; font-size: 12px; }
+
+.folder-card-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 15px;
+}
+
+.folder-card-wrap { min-width: 0; }
+
+.folder-card {
+  position: relative;
+  display: flex;
+  min-height: 170px;
+  flex-direction: column;
+  overflow: hidden;
+  padding: 17px;
+  border: 1px solid rgba(99, 179, 255, .17);
+  border-radius: 16px;
+  color: inherit;
+  background: linear-gradient(145deg, rgba(18, 47, 91, .88), rgba(9, 26, 55, .94));
+  text-decoration: none;
+  box-shadow: 0 9px 22px rgba(1, 14, 40, .16);
+  transition: transform .24s ease, border-color .24s ease, box-shadow .24s ease;
+}
+
+.folder-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(135deg, rgba(47, 128, 255, .12), transparent 45%);
+}
+
+.folder-card:hover {
+  transform: translateY(-4px);
+  border-color: rgba(99, 179, 255, .44);
+  box-shadow: 0 16px 30px rgba(3, 32, 84, .32), 0 0 0 1px rgba(47, 128, 255, .07);
+}
+
+.folder-card:focus-visible {
+  outline: 3px solid rgba(102, 166, 255, .36);
+  outline-offset: 2px;
+}
+
+.folder-card-icon {
+  position: relative;
+  display: grid;
+  width: 42px;
+  height: 42px;
+  place-items: center;
+  margin-bottom: 14px;
+  border: 1px solid rgba(99, 179, 255, .22);
+  border-radius: 12px;
+  color: #66a6ff;
+  background: linear-gradient(135deg, rgba(47, 128, 255, .26), rgba(47, 128, 255, .07));
+  font-size: 18px;
+}
+
+.folder-card-content { position: relative; min-width: 0; }
+.folder-card-topline { display: flex; align-items: center; justify-content: space-between; }
+.folder-card-type { color: #7896bd; font-size: 9px; font-weight: 800; letter-spacing: .12em; }
+.folder-card-arrow { color: #7596bf; transition: color .2s ease, transform .2s ease; }
+.folder-card:hover .folder-card-arrow { color: #66a6ff; transform: translate(2px, -2px); }
+
+.folder-card h3 {
+  overflow: hidden;
+  margin: 10px 0 14px;
+  color: #edf5ff;
+  font-size: 17px;
+  font-weight: 750;
+  letter-spacing: -.02em;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.folder-card-meta { display: flex; flex-wrap: wrap; gap: 9px 14px; color: #8da6c7; font-size: 11px; }
+.folder-card-meta span { display: inline-flex; align-items: center; gap: 5px; }
+.folder-card-meta i { color: #4e9cff; }
+.folder-card-open { position: relative; display: flex; align-items: center; gap: 6px; margin-top: auto; padding-top: 15px; color: #66a6ff; font-size: 11px; font-weight: 700; }
+.folder-card-open i { transition: transform .2s ease; }
+.folder-card:hover .folder-card-open i { transform: translateX(3px); }
+
+.nested-folder-cards {
+  display: grid;
+  gap: 10px;
+  margin-top: 10px;
+  padding-left: 12px;
+  border-left: 1px solid rgba(99, 179, 255, .17);
+}
+
+.nested-folder-cards .folder-card { min-height: 132px; padding: 14px; }
+.nested-folder-cards .folder-card-icon { width: 36px; height: 36px; margin-bottom: 10px; font-size: 15px; }
+.nested-folder-cards .folder-card h3 { margin: 7px 0 10px; font-size: 14px; }
+
+.folder-detail-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 15px; padding-bottom: 18px; border-bottom: 1px solid rgba(99, 179, 255, .13); }
+.folder-detail-icon { display: inline-grid; width: 44px; height: 44px; place-items: center; margin-bottom: 12px; border-radius: 13px; color: #66a6ff; background: rgba(47, 128, 255, .16); font-size: 20px; }
+.folder-detail-head h2 { margin: 0 0 4px; color: #eef5ff; font-size: 20px; }
+.folder-detail-head p { margin: 0; color: #829abd; font-size: 12px; }
+
+.folder-details-card h3 { margin: 24px 0 10px; color: #bcd0eb; font-size: 12px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
+.folder-detail-list,
+.folder-file-list { display: flex; flex-direction: column; gap: 7px; }
+.folder-detail-list a,
+.folder-file-list a { display: flex; align-items: center; gap: 10px; min-width: 0; padding: 11px 12px; border: 1px solid rgba(99, 179, 255, .12); border-radius: 10px; color: #dceaff; background: rgba(20, 54, 105, .38); font-size: 12.5px; text-decoration: none; transition: background .2s ease, border-color .2s ease, transform .2s ease; }
+.folder-detail-list a:hover,
+.folder-file-list a:hover { border-color: rgba(99, 179, 255, .34); background: rgba(47, 128, 255, .13); transform: translateX(2px); }
+.folder-detail-list a i:first-child { color: #66a6ff; }
+.folder-detail-list a i:last-child,
+.folder-file-list a > i:last-child { margin-left: auto; color: #7896bd; }
+.folder-file-list a span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.muted { color: #829abd; font-size: 12px; }
+
+@media (max-width: 1050px) {
+  .folders-layout { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 640px) {
+  .folders-page-head { align-items: flex-start; flex-direction: column; }
+  .folders-page-head .btn { width: 100%; }
+  .folder-card-grid { grid-template-columns: 1fr; }
+  .folder-card-wrap[style] { margin-left: 0 !important; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .folder-card,
+  .folder-card-arrow,
+  .folder-card-open i,
+  .folder-detail-list a,
+  .folder-file-list a { transition: none; }
+}
+
+/* End of clickable folder card UI */

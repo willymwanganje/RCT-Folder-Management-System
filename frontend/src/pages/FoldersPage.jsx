@@ -8,26 +8,62 @@ import ConfirmDialog from "../components/ConfirmDialog";
 import EmptyState from "../components/EmptyState";
 import FileIcon from "../components/FileIcon";
 
-function FolderList({ nodes, depth = 0 }) {
+function flatten(nodes, prefix = "") {
+  const out = [];
+  for (const node of nodes || []) {
+    const label = prefix ? `${prefix} / ${node.name}` : node.name;
+    out.push({ id: node.id, label, categoryId: node.categoryId });
+    out.push(...flatten(node.children, label));
+  }
+  return out;
+}
+
+function filterByCategory(nodes, categoryId) {
+  if (!categoryId) return nodes || [];
+  return (nodes || [])
+    .map((node) => {
+      const children = filterByCategory(node.children, categoryId);
+      const belongs = String(node.categoryId) === String(categoryId);
+      return belongs || children.length ? { ...node, children } : null;
+    })
+    .filter(Boolean);
+}
+
+function FolderCard({ folder, categoryId, depth = 0 }) {
+  const href = categoryId
+    ? `/categories/${categoryId}/folders/${folder.id}`
+    : `/folders/${folder.id}`;
+
   return (
-    <ul className="tree" style={{ paddingLeft: depth ? 16 : 0 }}>
-      {nodes.map((n) => (
-        <li key={n.id}>
-          <Link to={`/folders/${n.id}`}>
-            {n.name}
-            <small>
-              {n._count?.documents || 0} files · {n._count?.children || 0} folders
-            </small>
-          </Link>
-          {n.children?.length > 0 && <FolderList nodes={n.children} depth={depth + 1} />}
-        </li>
-      ))}
-    </ul>
+    <div className="folder-card-wrap" style={{ marginLeft: depth ? 18 : 0 }}>
+      <Link className="folder-card" to={href} aria-label={`Open folder ${folder.name}`}>
+        <div className="folder-card-icon"><i className="bi bi-folder-fill" /></div>
+        <div className="folder-card-content">
+          <div className="folder-card-topline">
+            <span className="folder-card-type">FOLDER</span>
+            <i className="bi bi-arrow-up-right folder-card-arrow" />
+          </div>
+          <h3>{folder.name}</h3>
+          <div className="folder-card-meta">
+            <span><i className="bi bi-file-earmark-text" /> {folder._count?.documents || 0} files</span>
+            <span><i className="bi bi-folder2-open" /> {folder._count?.children || 0} folders</span>
+          </div>
+        </div>
+        <span className="folder-card-open">Open <i className="bi bi-arrow-right" /></span>
+      </Link>
+      {folder.children?.length > 0 && (
+        <div className="nested-folder-cards">
+          {folder.children.map((child) => (
+            <FolderCard key={child.id} folder={child} categoryId={categoryId} depth={depth + 1} />
+          ))}
+        </div>
+      )}
+    </div>
   );
 }
 
 export default function FoldersPage() {
-  const { id } = useParams();
+  const { id, categoryId } = useParams();
   const { can } = useAuth();
   const toast = useToast();
   const [tree, setTree] = useState([]);
@@ -37,13 +73,13 @@ export default function FoldersPage() {
   const [pendingDelete, setPendingDelete] = useState(false);
 
   async function loadTree() {
-    const res = await api.get("/api/folders/tree");
-    setTree(res.data);
+    const response = await api.get("/api/folders/tree");
+    setTree(response.data);
   }
 
   useEffect(() => {
     loadTree().catch((err) => toast.push(err.message, "error"));
-    api.get("/api/categories").then((r) => setCategories(r.data)).catch(() => {});
+    api.get("/api/categories").then((response) => setCategories(response.data)).catch(() => {});
   }, []);
 
   useEffect(() => {
@@ -51,9 +87,8 @@ export default function FoldersPage() {
       setFolder(null);
       return;
     }
-    api
-      .get(`/api/folders/${id}`)
-      .then((r) => setFolder(r.data))
+    api.get(`/api/folders/${id}`)
+      .then((response) => setFolder(response.data))
       .catch((err) => toast.push(err.message, "error"));
   }, [id]);
 
@@ -64,15 +99,12 @@ export default function FoldersPage() {
       await api.post("/api/folders", {
         name: fd.get("name"),
         parentId: fd.get("parentId") || null,
-        categoryId: fd.get("categoryId") || null,
+        categoryId: fd.get("categoryId") || categoryId || null,
       });
       toast.push("Folder created");
       setShowCreate(false);
-      loadTree();
-      if (id) {
-        const r = await api.get(`/api/folders/${id}`);
-        setFolder(r.data);
-      }
+      await loadTree();
+      if (id) setFolder((await api.get(`/api/folders/${id}`)).data);
     } catch (err) {
       toast.push(err.message, "error");
     }
@@ -83,9 +115,8 @@ export default function FoldersPage() {
     try {
       await api.put(`/api/folders/${id}`, { name: new FormData(e.target).get("name") });
       toast.push("Folder updated");
-      loadTree();
-      const r = await api.get(`/api/folders/${id}`);
-      setFolder(r.data);
+      await loadTree();
+      setFolder((await api.get(`/api/folders/${id}`)).data);
     } catch (err) {
       toast.push(err.message, "error");
     }
@@ -103,130 +134,60 @@ export default function FoldersPage() {
     }
   }
 
+  const visibleTree = filterByCategory(tree, categoryId);
+  const categoryName = categories.find((c) => String(c.id) === String(categoryId))?.name;
+
   return (
-    <div>
-      <div className="page-head">
+    <div className="folders-page">
+      <div className="page-head folders-page-head">
         <div>
-          <h1>Folders</h1>
-          <p>Organize documents in nested folders by programme area.</p>
+          <span className="section-kicker"><i className="bi bi-folder2-open" /> File organization</span>
+          <h1>{categoryName || "Folders"}</h1>
+          <p>{categoryId ? "Folders belonging to this category." : "Choose a folder to explore its files."}</p>
         </div>
-        {can("folder.create") && (
-          <button className="btn primary" type="button" onClick={() => setShowCreate(true)}>
-            New folder
-          </button>
-        )}
+        {can("folder.create") && <button className="btn primary" type="button" onClick={() => setShowCreate(true)}><i className="bi bi-plus-lg me-2" />New folder</button>}
       </div>
-      <div className="split">
-        <section className="card">
-          <h2>Library</h2>
-          {tree.length === 0 ? (
-            <EmptyState title="No folders yet" hint="Create a root folder to begin organizing files." />
-          ) : (
-            <FolderList nodes={tree} />
+
+      <div className="folders-layout">
+        <section className="card folder-library-card">
+          <div className="folder-section-heading">
+            <div><h2><i className="bi bi-grid-fill me-2" />{categoryId ? "Category folders" : "Folder library"}</h2><p>{visibleTree.length} top-level folders</p></div>
+          </div>
+          {visibleTree.length === 0 ? <EmptyState title="No folders yet" hint="Create a folder to begin organizing files." /> : (
+            <div className="folder-card-grid">
+              {visibleTree.map((folderNode) => <FolderCard key={folderNode.id} folder={folderNode} categoryId={categoryId} />)}
+            </div>
           )}
         </section>
-        <section className="card">
-          {!folder ? (
-            <EmptyState title="Select a folder" hint="Choose a folder from the library to inspect its contents." />
-          ) : (
+
+        <section className="card folder-details-card">
+          {!folder ? <EmptyState title="Select a folder" hint="Click any folder card to inspect its subfolders and files." /> : (
             <>
-              <div className="page-head compact">
-                <h2>{folder.name}</h2>
-                {can("folder.delete") && (
-                  <button className="btn ghost sm" type="button" onClick={() => setPendingDelete(true)}>
-                    Delete
-                  </button>
-                )}
+              <div className="folder-detail-head">
+                <div><div className="folder-detail-icon"><i className="bi bi-folder-fill" /></div><h2>{folder.name}</h2><p>{folder.documents?.length || 0} files in this folder</p></div>
+                {can("folder.delete") && <button className="btn ghost sm" type="button" onClick={() => setPendingDelete(true)}>Delete</button>}
               </div>
-              {can("folder.update") && (
-                <form className="inline-form" onSubmit={rename}>
-                  <input name="name" defaultValue={folder.name} key={folder.id} />
-                  <button className="btn ghost sm" type="submit">
-                    Rename
-                  </button>
-                </form>
-              )}
+              {can("folder.update") && <form className="inline-form" onSubmit={rename}><input name="name" defaultValue={folder.name} key={folder.id} /><button className="btn ghost sm" type="submit">Rename</button></form>}
+
               <h3>Subfolders</h3>
-              <ul className="plain-list">
-                {folder.children?.map((c) => (
-                  <li key={c.id}>
-                    <Link to={`/folders/${c.id}`}>{c.name}</Link>
-                  </li>
-                ))}
-                {folder.children?.length === 0 && <li className="muted">No subfolders</li>}
-              </ul>
-              <h3>Documents</h3>
-              <ul className="activity">
-                {folder.documents?.map((d) => (
-                  <li key={d.id}>
-                    <FileIcon type={d.fileType} />
-                    <Link to={`/documents/${d.id}`}>{d.name}</Link>
-                  </li>
-                ))}
-              </ul>
+              <div className="folder-detail-list">
+                {folder.children?.map((child) => <Link key={child.id} to={categoryId ? `/categories/${categoryId}/folders/${child.id}` : `/folders/${child.id}`}><i className="bi bi-folder2-open" />{child.name}<i className="bi bi-chevron-right" /></Link>)}
+                {folder.children?.length === 0 && <span className="muted">No subfolders</span>}
+              </div>
+
+              <h3>Files</h3>
+              <div className="folder-file-list">
+                {folder.documents?.map((document) => <Link key={document.id} to={`/documents/${document.id}`}><FileIcon type={document.fileType} /><span>{document.name}</span><i className="bi bi-chevron-right" /></Link>)}
+                {folder.documents?.length === 0 && <span className="muted">No files in this folder</span>}
+              </div>
             </>
           )}
         </section>
       </div>
 
-      {showCreate && (
-        <Modal title="Create folder" onClose={() => setShowCreate(false)}>
-          <form className="form-grid" onSubmit={createFolder}>
-            <label className="full">
-              Name
-              <input name="name" required />
-            </label>
-            <label>
-              Parent
-              <select name="parentId" defaultValue={id || ""}>
-                <option value="">Root</option>
-                {flatten(tree).map((f) => (
-                  <option key={f.id} value={f.id}>
-                    {f.label}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label>
-              Category
-              <select name="categoryId">
-                <option value="">None</option>
-                {categories.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.name}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <div className="form-actions full">
-              <button className="btn primary" type="submit">
-                Create
-              </button>
-            </div>
-          </form>
-        </Modal>
-      )}
+      {showCreate && <Modal title="Create folder" onClose={() => setShowCreate(false)}><form className="form-grid" onSubmit={createFolder}><label className="full">Name<input name="name" required /></label><label>Parent<select name="parentId" defaultValue={id || ""}><option value="">Root</option>{flatten(visibleTree).map((item) => <option key={item.id} value={item.id}>{item.label}</option>)}</select></label><label>Category<select name="categoryId" defaultValue={categoryId || ""} disabled={Boolean(categoryId)}><option value="">None</option>{categories.map((category) => <option key={category.id} value={category.id}>{category.name}</option>)}</select></label><div className="form-actions full"><button className="btn primary" type="submit">Create</button></div></form></Modal>}
 
-      {pendingDelete && (
-        <ConfirmDialog
-          title="Delete folder"
-          message="Only empty folders can be deleted."
-          danger
-          confirmLabel="Delete"
-          onClose={() => setPendingDelete(false)}
-          onConfirm={remove}
-        />
-      )}
+      {pendingDelete && <ConfirmDialog title="Delete folder" message="Only empty folders can be deleted." danger confirmLabel="Delete" onClose={() => setPendingDelete(false)} onConfirm={remove} />}
     </div>
   );
-}
-
-function flatten(nodes, prefix = "") {
-  const out = [];
-  for (const n of nodes || []) {
-    const label = prefix ? `${prefix} / ${n.name}` : n.name;
-    out.push({ id: n.id, label });
-    out.push(...flatten(n.children, label));
-  }
-  return out;
 }
