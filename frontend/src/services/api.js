@@ -188,9 +188,7 @@ export const api = {
 
     if (!res.ok) {
       let message = "Download failed";
-
-      const contentType =
-        res.headers.get("content-type") || "";
+      const contentType = res.headers.get("content-type") || "";
 
       if (contentType.includes("application/json")) {
         try {
@@ -203,27 +201,25 @@ export const api = {
 
       const error = new Error(message);
       error.status = res.status;
-
       throw error;
     }
 
-    if (res.redirected) {
-      window.open(res.url, "_blank");
-      return;
-    }
-
+    // The backend redirects to a signed Supabase URL.
+    // Fetch follows that redirect and this saves the final response as a file.
     const blob = await res.blob();
-    const url = URL.createObjectURL(blob);
+    const objectUrl = URL.createObjectURL(blob);
+    const anchor = document.createElement("a");
 
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = filename || "document";
+    anchor.href = objectUrl;
+    anchor.download = filename || "document";
+    anchor.style.display = "none";
 
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
+    document.body.appendChild(anchor);
+    anchor.click();
+    anchor.remove();
 
-    URL.revokeObjectURL(url);
+    // Give the browser time to start the download before releasing the URL.
+    window.setTimeout(() => URL.revokeObjectURL(objectUrl), 1000);
   },
 };
 
