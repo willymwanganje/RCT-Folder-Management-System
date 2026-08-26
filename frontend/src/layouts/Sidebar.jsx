@@ -20,11 +20,13 @@ const USER_NAV = [
   { to: "/", label: "Dashboard", icon: "bi-grid-1x2-fill", end: true },
   { to: "/documents", label: "Documents", icon: "bi-file-earmark-text", permission: "document.view" },
   { to: "/documents/mine", label: "My Documents", icon: "bi-file-person", permission: "document.view" },
+  { to: "/categories", label: "Categories", icon: "bi-collection", permission: "category.view" },
   { to: "/folders", label: "Folders", icon: "bi-folder2-open", permission: "folder.view" },
   { to: "/documents/upload", label: "Upload Document", icon: "bi-cloud-arrow-up", permission: "document.create" },
   { to: "/profile", label: "Profile", icon: "bi-person-circle" },
   { to: "/settings", label: "Settings", icon: "bi-gear" },
 ];
+
 
 export default function Sidebar({ open, onClose }) {
   const { user, can } = useAuth();
