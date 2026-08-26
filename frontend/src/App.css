@@ -2286,3 +2286,48 @@ textarea:focus {
 }
 
 /* End of wide JPEG logo fix */
+/* Document details - uploader text contrast */
+.uploader-block {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  color: #ffffff;
+}
+
+.uploader-block > div {
+  min-width: 0;
+}
+
+.uploader-block small {
+  display: block;
+  margin-bottom: 4px;
+  color: rgba(255, 255, 255, 0.72) !important;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.uploader-block strong {
+  display: block;
+  color: #ffffff !important;
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1.35;
+}
+
+.uploader-block p {
+  margin: 4px 0 0;
+  color: rgba(255, 255, 255, 0.68) !important;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.meta dt {
+  color: rgba(255, 255, 255, 0.72) !important;
+}
+
+.meta dd,
+.meta dd a {
+  color: #ffffff !important;
+}
