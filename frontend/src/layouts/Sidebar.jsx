@@ -1,6 +1,6 @@
 import { NavLink } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import rctLogo from "../assets/rct-logo.jpg";
+import rctLogo from "../assets/rct-logo.png";
 import "../Sidebar.css";
 const ADMIN_NAV = [
   { to: "/", label: "Dashboard", icon: "bi-grid-1x2-fill", end: true },
