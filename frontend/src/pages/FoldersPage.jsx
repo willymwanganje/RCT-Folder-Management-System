@@ -262,6 +262,7 @@ export default function FoldersPage() {
                   key={folderNode.id}
                   folder={folderNode}
                   categoryId={categoryId}
+                  showChildren={false}
                 />
               ))}
             </div>
