@@ -93,7 +93,8 @@ function FolderCard({ folder, categoryId, depth = 0, showChildren = true }) {
 
 export default function FoldersPage() {
   const { id, categoryId } = useParams();
-  const { can } = useAuth();
+  const { user, can } = useAuth();
+  const canCreateFolder = ["super_admin", "admin"].includes(user?.role?.slug) && can("folder.create");
   const toast = useToast();
 
   const [tree, setTree] = useState([]);
@@ -150,6 +151,11 @@ export default function FoldersPage() {
 
   async function createFolder(event) {
     event.preventDefault();
+
+    if (!canCreateFolder) {
+      toast.push("You are not allowed to create folders", "error");
+      return;
+    }
     const formData = new FormData(event.currentTarget);
 
     try {
@@ -225,7 +231,7 @@ export default function FoldersPage() {
           </p>
         </div>
 
-        {can("folder.create") && (
+        {canCreateFolder && (
           <button
             className="btn primary"
             type="button"
