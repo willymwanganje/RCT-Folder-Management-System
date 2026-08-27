@@ -2,7 +2,8 @@ import { NavLink } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import rctLogo from "../assets/rct-logo.png";
 import "../Sidebar.css";
-const ADMIN_NAV = [
+
+const SUPER_ADMIN_NAV = [
   { to: "/", label: "Dashboard", icon: "bi-grid-1x2-fill", end: true },
   { to: "/documents", label: "All Documents", icon: "bi-file-earmark-text", permission: "document.view" },
   { to: "/documents/upload", label: "Upload Document", icon: "bi-cloud-arrow-up", permission: "document.create" },
@@ -16,6 +17,16 @@ const ADMIN_NAV = [
   { to: "/profile", label: "Profile", icon: "bi-person-circle" },
 ];
 
+const ADMIN_NAV = [
+  { to: "/", label: "Dashboard", icon: "bi-grid-1x2-fill", end: true },
+  { to: "/documents", label: "Documents", icon: "bi-file-earmark-text", permission: "document.view" },
+  { to: "/documents/upload", label: "Upload Document", icon: "bi-cloud-arrow-up", permission: "document.create" },
+  { to: "/folders", label: "Folders", icon: "bi-folder2-open", permission: "folder.view" },
+  { to: "/categories", label: "Categories", icon: "bi-collection", permission: "category.view" },
+  { to: "/users", label: "Users", icon: "bi-people", permission: "user.view" },
+  { to: "/profile", label: "Profile", icon: "bi-person-circle" },
+];
+
 const USER_NAV = [
   { to: "/", label: "Dashboard", icon: "bi-grid-1x2-fill", end: true },
   { to: "/documents", label: "Documents", icon: "bi-file-earmark-text", permission: "document.view" },
@@ -24,37 +35,25 @@ const USER_NAV = [
   { to: "/folders", label: "Folders", icon: "bi-folder2-open", permission: "folder.view" },
   { to: "/documents/upload", label: "Upload Document", icon: "bi-cloud-arrow-up", permission: "document.create" },
   { to: "/profile", label: "Profile", icon: "bi-person-circle" },
-  { to: "/settings", label: "Settings", icon: "bi-gear" },
 ];
-
 
 export default function Sidebar({ open, onClose }) {
   const { user, can } = useAuth();
-  const isAdmin = ["super_admin", "admin"].includes(user?.role?.slug);
-  const items = (isAdmin ? ADMIN_NAV : USER_NAV).filter(
-    (item) => !item.permission || can(item.permission)
-  );
+  const role = user?.role?.slug;
+  const isSuperAdmin = role === "super_admin";
+  const isAdmin = role === "admin";
+  const navigation = isSuperAdmin ? SUPER_ADMIN_NAV : isAdmin ? ADMIN_NAV : USER_NAV;
+  const items = navigation.filter((item) => !item.permission || can(item.permission));
 
   return (
     <aside className={`sidebar ${open ? "open" : ""}`} aria-label="Main navigation">
       <div className="brand brand-clean">
-        <img
-          src={rctLogo}
-          alt="Rice Council of Tanzania"
-          className="brand-logo"
-        />
+        <img src={rctLogo} alt="Rice Council of Tanzania" className="brand-logo" />
       </div>
-
       <nav className="sidebar-nav">
         {items.map((item) => (
-          <NavLink
-            key={item.to}
-            to={item.to}
-            end={item.end}
-            onClick={onClose}
-            className="sidebar-link"
-          >
-            <i className={`bi ${item.icon}`} aria-hidden="true"></i>
+          <NavLink key={item.to} to={item.to} end={item.end} onClick={onClose} className="sidebar-link">
+            <i className={`bi ${item.icon}`} aria-hidden="true" />
             <span>{item.label}</span>
           </NavLink>
         ))}
