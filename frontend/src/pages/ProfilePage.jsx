@@ -4,16 +4,47 @@ import { api } from "../services/api";
 import { useToast } from "../context/ToastContext";
 import Avatar from "../components/Avatar";
 
+function PasswordField({ label, name, visible, onToggle, minLength }) {
+  return (
+    <label className="password-field">
+      <span>{label}</span>
+      <span className="password-input-wrap">
+        <input
+          type={visible ? "text" : "password"}
+          name={name}
+          minLength={minLength}
+          required
+          autoComplete={name === "currentPassword" ? "current-password" : "new-password"}
+        />
+        <button
+          className="password-toggle"
+          type="button"
+          onClick={onToggle}
+          aria-label={visible ? `Hide ${label}` : `Show ${label}`}
+          title={visible ? "Hide password" : "Show password"}
+        >
+          <i className={`bi ${visible ? "bi-eye-slash" : "bi-eye"}`} aria-hidden="true" />
+        </button>
+      </span>
+    </label>
+  );
+}
+
 export default function ProfilePage() {
   const { user, setUser } = useAuth();
   const toast = useToast();
   const [busy, setBusy] = useState(false);
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
 
   async function save(e) {
     e.preventDefault();
     const fd = new FormData(e.target);
     try {
-      const res = await api.put("/api/profile", { fullName: fd.get("fullName"), phone: fd.get("phone") });
+      const res = await api.put("/api/profile", {
+        fullName: fd.get("fullName"),
+        phone: fd.get("phone"),
+      });
       setUser(res.data);
       toast.push("Profile updated");
     } catch (err) {
@@ -30,6 +61,8 @@ export default function ProfilePage() {
         newPassword: fd.get("newPassword"),
       });
       e.target.reset();
+      setShowCurrentPassword(false);
+      setShowNewPassword(false);
       toast.push("Password changed");
     } catch (err) {
       toast.push(err.message, "error");
@@ -71,6 +104,7 @@ export default function ProfilePage() {
           <p>Your RCT identity and security settings.</p>
         </div>
       </div>
+
       <section className="card profile-hero">
         <Avatar user={user} size={72} />
         <div>
@@ -91,6 +125,7 @@ export default function ProfilePage() {
           </div>
         </div>
       </section>
+
       <form className="card form-grid" onSubmit={save}>
         <label>
           Full name
@@ -110,16 +145,22 @@ export default function ProfilePage() {
           </button>
         </div>
       </form>
+
       <form className="card form-grid" onSubmit={changePassword}>
         <h2 className="full">Change password</h2>
-        <label>
-          Current password
-          <input type="password" name="currentPassword" required />
-        </label>
-        <label>
-          New password
-          <input type="password" name="newPassword" minLength={10} required />
-        </label>
+        <PasswordField
+          label="Current password"
+          name="currentPassword"
+          visible={showCurrentPassword}
+          onToggle={() => setShowCurrentPassword((value) => !value)}
+        />
+        <PasswordField
+          label="New password"
+          name="newPassword"
+          minLength={10}
+          visible={showNewPassword}
+          onToggle={() => setShowNewPassword((value) => !value)}
+        />
         <div className="form-actions full">
           <button className="btn primary" type="submit">
             Update password

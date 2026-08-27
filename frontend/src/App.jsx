@@ -21,6 +21,7 @@ import "./Categories_cards.css";
 import "./Folders_cards.css";
 import "./Folder_full_page.css";
 import "./Folder_hierarchy_pages.css";
+import "./Profile_password_eye.css";
 
 
 export default function App() {
