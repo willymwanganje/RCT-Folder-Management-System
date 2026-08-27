@@ -52,11 +52,24 @@ const USER_DEFAULT_PERMISSIONS = [
   "document.create",
   "document.download",
   "folder.view",
-  "folder.create",
   "category.view",
 ];
 
-const ADMIN_EXCLUDED_PERMISSIONS = [];
+// These are not granted to a normal admin by default.
+// Existing database assignments must still be removed once in Roles & Permissions.
+const ADMIN_EXCLUDED_PERMISSIONS = [
+  "admin.create",
+  "admin.view",
+  "admin.update",
+  "admin.delete",
+  "admin.activate",
+  "admin.deactivate",
+  "role.update",
+  "user.assign_role",
+  "user.assign_permission",
+  "audit.view",
+  "settings.update",
+];
 
 module.exports = {
   PERMISSIONS,
