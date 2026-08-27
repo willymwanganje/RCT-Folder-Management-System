@@ -33,7 +33,7 @@ function filterByCategory(nodes, categoryId) {
     .filter(Boolean);
 }
 
-function FolderCard({ folder, categoryId, depth = 0 }) {
+function FolderCard({ folder, categoryId, depth = 0, showChildren = true }) {
   const href = categoryId
     ? `/categories/${categoryId}/folders/${folder.id}`
     : `/folders/${folder.id}`;
@@ -74,7 +74,7 @@ function FolderCard({ folder, categoryId, depth = 0 }) {
         </span>
       </Link>
 
-      {folder.children?.length > 0 && (
+      {showChildren && folder.children?.length > 0 && (
         <div className="nested-folder-cards">
           {folder.children.map((child) => (
             <FolderCard
@@ -82,6 +82,7 @@ function FolderCard({ folder, categoryId, depth = 0 }) {
               folder={child}
               categoryId={categoryId}
               depth={depth + 1}
+              showChildren={showChildren}
             />
           ))}
         </div>
@@ -214,11 +215,13 @@ export default function FoldersPage() {
             <i className="bi bi-folder2-open" aria-hidden="true" />
             File organization
           </span>
-          <h1>{categoryName || "Folders"}</h1>
+          <h1>{id ? folder?.name || "Folder" : categoryName || "Folders"}</h1>
           <p>
-            {categoryId
-              ? "Folders belonging to this category."
-              : "Choose a folder to explore its files."}
+            {id
+              ? "Browse this folder's subfolders or files."
+              : categoryId
+                ? "Folders belonging to this category."
+                : "Choose a folder to explore its files."}
           </p>
         </div>
 
@@ -309,41 +312,43 @@ export default function FoldersPage() {
                 </form>
               )}
 
-              <h3>Subfolders</h3>
-              <div className="folder-detail-list">
-                {folder.children?.map((child) => {
-                  const childPath = categoryId
-                    ? `/categories/${categoryId}/folders/${child.id}`
-                    : `/folders/${child.id}`;
-
-                  return (
-                    <Link key={child.id} to={childPath}>
-                      <i className="bi bi-folder2-open" aria-hidden="true" />
-                      {child.name}
-                      <i className="bi bi-chevron-right" aria-hidden="true" />
-                    </Link>
-                  );
-                })}
-
-                {folder.children?.length === 0 && (
-                  <span className="muted">No subfolders</span>
-                )}
-              </div>
-
-              <h3>Files</h3>
-              <div className="folder-file-list">
-                {folder.documents?.map((document) => (
-                  <Link key={document.id} to={`/documents/${document.id}`}>
-                    <FileIcon type={document.fileType} />
-                    <span>{document.name}</span>
-                    <i className="bi bi-chevron-right" aria-hidden="true" />
-                  </Link>
-                ))}
-
-                {folder.documents?.length === 0 && (
-                  <span className="muted">No files in this folder</span>
-                )}
-              </div>
+              {folder.children?.length > 0 ? (
+                <>
+                  <div className="folder-content-heading">
+                    <h3>Subfolders</h3>
+                    <span>{folder.children.length} subfolders</span>
+                  </div>
+                  <div className="folder-detail-subfolder-grid">
+                    {folder.children.map((child) => (
+                      <FolderCard
+                        key={child.id}
+                        folder={child}
+                        categoryId={categoryId}
+                        showChildren={false}
+                      />
+                    ))}
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="folder-content-heading">
+                    <h3>Files</h3>
+                    <span>{folder.documents?.length || 0} files</span>
+                  </div>
+                  <div className="folder-file-list">
+                    {folder.documents?.map((document) => (
+                      <Link key={document.id} to={`/documents/${document.id}`}>
+                        <FileIcon type={document.fileType} />
+                        <span>{document.name}</span>
+                        <i className="bi bi-chevron-right" aria-hidden="true" />
+                      </Link>
+                    ))}
+                    {folder.documents?.length === 0 && (
+                      <span className="muted">No files in this folder</span>
+                    )}
+                  </div>
+                </>
+              )}
             </>
           )}
         </section>

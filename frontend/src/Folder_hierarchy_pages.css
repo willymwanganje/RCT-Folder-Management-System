@@ -1,0 +1,52 @@
+.folder-content-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin: 30px 0 14px;
+}
+
+.folder-content-heading h3 {
+  margin: 0;
+}
+
+.folder-content-heading > span {
+  color: rgba(190, 211, 239, 0.7);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.folder-detail-subfolder-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  gap: 16px;
+}
+
+.folder-detail-subfolder-grid .folder-card-wrap {
+  margin-left: 0 !important;
+}
+
+.folder-detail-subfolder-grid .folder-card {
+  min-height: 172px;
+}
+
+.folder-detail-subfolder-grid .nested-folder-cards {
+  display: none;
+}
+
+.folder-details-full .folder-file-list {
+  display: grid;
+  gap: 10px;
+}
+
+@media (max-width: 640px) {
+  .folder-content-heading {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .folder-detail-subfolder-grid {
+    grid-template-columns: 1fr;
+  }
+}

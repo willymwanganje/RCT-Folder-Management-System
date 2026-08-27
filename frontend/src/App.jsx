@@ -20,6 +20,7 @@ import "./App.css";
 import "./Categories_cards.css";
 import "./Folders_cards.css";
 import "./Folder_full_page.css";
+import "./Folder_hierarchy_pages.css";
 
 
 export default function App() {
