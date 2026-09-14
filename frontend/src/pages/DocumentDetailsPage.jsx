@@ -90,11 +90,23 @@ export default function DocumentDetailsPage() {
           <h2>Preview</h2>
           {previewable && src ? (
             <>
-              {doc.fileType === "pdf" && <iframe className="preview" title="preview" src={src} />}
+              {doc.fileType === "pdf" && (
+                <iframe
+                  className="preview"
+                  title="preview"
+                  src={`${src}#toolbar=0&navpanes=0&scrollbar=0`}
+                />
+              )}
               {["jpg", "jpeg", "png"].includes(doc.fileType) && (
                 <img className="preview-img" src={src} alt={doc.name} />
               )}
-              {doc.fileType === "txt" && <iframe className="preview" title="preview" src={src} />}
+              {doc.fileType === "txt" && (
+                <iframe
+                  className="preview"
+                  title="preview"
+                  src={src}
+                />
+              )}
             </>
           ) : (
             <p className="muted">Preview is not available for this file type. Download the file to view it.</p>
