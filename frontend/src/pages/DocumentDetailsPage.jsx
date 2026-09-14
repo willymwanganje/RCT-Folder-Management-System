@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useParams, useNavigate } from "react-router-dom";
 import { api } from "../services/api";
 import { useAuth } from "../context/AuthContext";
 import { useToast } from "../context/ToastContext";
@@ -12,12 +12,15 @@ const PREVIEW = ["pdf", "jpg", "jpeg", "png", "txt"];
 
 export default function DocumentDetailsPage() {
   const { id } = useParams();
+  const navigate = useNavigate();
   const { user } = useAuth();
   const toast = useToast();
   const [doc, setDoc] = useState(null);
   const [folders, setFolders] = useState([]);
   const [categories, setCategories] = useState([]);
   const [editing, setEditing] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   async function load() {
     const response = await api.get(`/api/documents/${id}`);
@@ -42,7 +45,6 @@ export default function DocumentDetailsPage() {
   async function save(event) {
     event.preventDefault();
     const formData = new FormData(event.target);
-
     try {
       const response = await api.put(`/api/documents/${id}`, {
         name: formData.get("name"),
@@ -66,6 +68,19 @@ export default function DocumentDetailsPage() {
     }
   }
 
+  async function handleDelete() {
+    setDeleting(true);
+    try {
+      await api.delete(`/api/documents/${id}`);
+      toast.push("Document deleted");
+      navigate("/documents");
+    } catch (err) {
+      toast.push(err.message, "error");
+      setDeleting(false);
+      setConfirmDelete(false);
+    }
+  }
+
   return (
     <div>
       <div className="page-head">
@@ -75,12 +90,17 @@ export default function DocumentDetailsPage() {
         </div>
         <div className="row-actions">
           <button className="btn primary" type="button" onClick={download}>
-            Download
+            ↓ Download
           </button>
           {canManage && (
-            <button className="btn ghost" type="button" onClick={() => setEditing(true)}>
-              Edit
-            </button>
+            <>
+              <button className="btn ghost" type="button" onClick={() => setEditing(true)}>
+                Edit
+              </button>
+              <button className="btn danger" type="button" onClick={() => setConfirmDelete(true)}>
+                Delete
+              </button>
+            </>
           )}
         </div>
       </div>
@@ -101,11 +121,7 @@ export default function DocumentDetailsPage() {
                 <img className="preview-img" src={src} alt={doc.name} />
               )}
               {doc.fileType === "txt" && (
-                <iframe
-                  className="preview"
-                  title="preview"
-                  src={src}
-                />
+                <iframe className="preview" title="preview" src={src} />
               )}
             </>
           ) : (
@@ -135,6 +151,7 @@ export default function DocumentDetailsPage() {
         </section>
       </div>
 
+      {/* Edit Modal */}
       {editing && canManage && (
         <Modal title="Update document" onClose={() => setEditing(false)}>
           <form className="form-grid" onSubmit={save}>
@@ -167,6 +184,21 @@ export default function DocumentDetailsPage() {
               <button className="btn primary" type="submit">Save</button>
             </div>
           </form>
+        </Modal>
+      )}
+
+      {/* Delete Confirm Modal */}
+      {confirmDelete && (
+        <Modal title="Delete document" onClose={() => setConfirmDelete(false)}>
+          <p>Are you sure you want to delete <strong>{doc.name}</strong>? This action cannot be undone.</p>
+          <div className="form-actions full">
+            <button className="btn ghost" type="button" onClick={() => setConfirmDelete(false)} disabled={deleting}>
+              Cancel
+            </button>
+            <button className="btn danger" type="button" onClick={handleDelete} disabled={deleting}>
+              {deleting ? "Deleting..." : "Yes, Delete"}
+            </button>
+          </div>
         </Modal>
       )}
     </div>
