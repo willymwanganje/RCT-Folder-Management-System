@@ -12,7 +12,7 @@ const PREVIEW = ["pdf", "jpg", "jpeg", "png", "txt"];
 
 export default function DocumentDetailsPage() {
   const { id } = useParams();
-  const { can } = useAuth();
+  const { user } = useAuth();
   const toast = useToast();
   const [doc, setDoc] = useState(null);
   const [folders, setFolders] = useState([]);
@@ -20,34 +20,37 @@ export default function DocumentDetailsPage() {
   const [editing, setEditing] = useState(false);
 
   async function load() {
-    const res = await api.get(`/api/documents/${id}`);
-    setDoc(res.data);
+    const response = await api.get(`/api/documents/${id}`);
+    setDoc(response.data);
   }
 
   useEffect(() => {
     load().catch((err) => toast.push(err.message, "error"));
-    api.get("/api/categories").then((r) => setCategories(r.data)).catch(() => {});
-    api.get("/api/folders").then((r) => setFolders(r.data)).catch(() => {});
+    api.get("/api/categories").then((response) => setCategories(response.data)).catch(() => {});
+    api.get("/api/folders").then((response) => setFolders(response.data)).catch(() => {});
   }, [id]);
 
   if (!doc) return <Spinner />;
 
+  const ownerId = doc.uploadedById ?? doc.uploadedBy?.id;
+  const isOwner = Number(ownerId) === Number(user?.id);
+  const isAdmin = ["admin", "super_admin"].includes(user?.role);
+  const canManage = isOwner || isAdmin;
   const previewable = PREVIEW.includes(doc.fileType);
-
-  // Tumia previewUrl (signed URL kutoka Supabase) inayotoka backend
   const src = doc.previewUrl || null;
 
-  async function save(e) {
-    e.preventDefault();
-    const fd = new FormData(e.target);
+  async function save(event) {
+    event.preventDefault();
+    const formData = new FormData(event.target);
+
     try {
-      const res = await api.put(`/api/documents/${id}`, {
-        name: fd.get("name"),
-        description: fd.get("description"),
-        categoryId: fd.get("categoryId"),
-        folderId: fd.get("folderId"),
+      const response = await api.put(`/api/documents/${id}`, {
+        name: formData.get("name"),
+        description: formData.get("description"),
+        categoryId: formData.get("categoryId"),
+        folderId: formData.get("folderId"),
       });
-      setDoc(res.data);
+      setDoc(response.data);
       setEditing(false);
       toast.push("Document updated");
     } catch (err) {
@@ -71,12 +74,10 @@ export default function DocumentDetailsPage() {
           <p>{doc.category?.name} · {doc.folder?.name}</p>
         </div>
         <div className="row-actions">
-          {can("document.download") && (
-            <button className="btn primary" type="button" onClick={download}>
-              Download
-            </button>
-          )}
-          {can("document.update") && (
+          <button className="btn primary" type="button" onClick={download}>
+            Download
+          </button>
+          {canManage && (
             <button className="btn ghost" type="button" onClick={() => setEditing(true)}>
               Edit
             </button>
@@ -89,20 +90,14 @@ export default function DocumentDetailsPage() {
           <h2>Preview</h2>
           {previewable && src ? (
             <>
-              {doc.fileType === "pdf" && (
-                <iframe className="preview" title="preview" src={src} />
-              )}
+              {doc.fileType === "pdf" && <iframe className="preview" title="preview" src={src} />}
               {["jpg", "jpeg", "png"].includes(doc.fileType) && (
                 <img className="preview-img" src={src} alt={doc.name} />
               )}
-              {doc.fileType === "txt" && (
-                <iframe className="preview" title="preview" src={src} />
-              )}
+              {doc.fileType === "txt" && <iframe className="preview" title="preview" src={src} />}
             </>
           ) : (
-            <p className="muted">
-              Preview is not available for this file type. Download the file to view it.
-            </p>
+            <p className="muted">Preview is not available for this file type. Download the file to view it.</p>
           )}
         </section>
 
@@ -123,14 +118,12 @@ export default function DocumentDetailsPage() {
               <FileIcon type={doc.fileType} /> {doc.originalName} · {(doc.fileSize / 1024).toFixed(1)} KB
             </dd>
             <dt>Folder</dt>
-            <dd>
-              <Link to={`/folders/${doc.folderId}`}>{doc.folder?.name}</Link>
-            </dd>
+            <dd><Link to={`/folders/${doc.folderId}`}>{doc.folder?.name}</Link></dd>
           </dl>
         </section>
       </div>
 
-      {editing && (
+      {editing && canManage && (
         <Modal title="Update document" onClose={() => setEditing(false)}>
           <form className="form-grid" onSubmit={save}>
             <label className="full">
@@ -140,20 +133,16 @@ export default function DocumentDetailsPage() {
             <label>
               Category
               <select name="categoryId" defaultValue={doc.categoryId}>
-                {categories.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.name}
-                  </option>
+                {categories.map((category) => (
+                  <option key={category.id} value={category.id}>{category.name}</option>
                 ))}
               </select>
             </label>
             <label>
               Folder
               <select name="folderId" defaultValue={doc.folderId}>
-                {folders.map((f) => (
-                  <option key={f.id} value={f.id}>
-                    {f.name}
-                  </option>
+                {folders.map((folder) => (
+                  <option key={folder.id} value={folder.id}>{folder.name}</option>
                 ))}
               </select>
             </label>
@@ -162,12 +151,8 @@ export default function DocumentDetailsPage() {
               <textarea name="description" rows="4" defaultValue={doc.description || ""} />
             </label>
             <div className="form-actions full">
-              <button className="btn ghost" type="button" onClick={() => setEditing(false)}>
-                Cancel
-              </button>
-              <button className="btn primary" type="submit">
-                Save
-              </button>
+              <button className="btn ghost" type="button" onClick={() => setEditing(false)}>Cancel</button>
+              <button className="btn primary" type="submit">Save</button>
             </div>
           </form>
         </Modal>
