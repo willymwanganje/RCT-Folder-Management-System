@@ -30,15 +30,6 @@ function documentInclude() {
   };
 }
 
-function assertCanManageDocument(existing, actor) {
-  const isOwner = Number(existing.uploadedById) === Number(actor.id);
-  const isAdmin = ["admin", "super_admin"].includes(actor.role);
-
-  if (!isOwner && !isAdmin) {
-    throw new ApiError(403, "You can only edit or delete your own documents");
-  }
-}
-
 function buildWhere(query, { mine, userId } = {}) {
   const where = {};
   if (mine) where.uploadedById = userId;
@@ -65,10 +56,15 @@ function buildWhere(query, { mine, userId } = {}) {
   return where;
 }
 
+// Generate signed URLs kwa document na uploader photo
 async function enrichDocument(doc) {
   if (!doc) return null;
 
-  if (doc.storageKey && doc.storageProvider === "supabase") {
+  // Signed URL kwa preview ya document (picha/pdf)
+  if (
+    doc.storageKey &&
+    doc.storageProvider === "supabase"
+  ) {
     try {
       doc.previewUrl = await createSignedDownloadUrl(doc.storageKey, 60 * 60);
     } catch (err) {
@@ -77,7 +73,11 @@ async function enrichDocument(doc) {
     }
   }
 
-  if (doc.uploadedBy?.profilePhotoUrl && !doc.uploadedBy.profilePhotoUrl.startsWith("http")) {
+  // Signed URL kwa profile photo ya uploader
+  if (
+    doc.uploadedBy?.profilePhotoUrl &&
+    !doc.uploadedBy.profilePhotoUrl.startsWith("http")
+  ) {
     try {
       doc.uploadedBy.profilePhotoUrl = await createSignedDownloadUrl(
         doc.uploadedBy.profilePhotoUrl,
@@ -107,12 +107,17 @@ async function listDocuments(query, opts) {
     }),
   ]);
 
+  // Enrich documents zote na signed URLs
   const enriched = await Promise.all(data.map(enrichDocument));
+
   return { data: enriched, meta: { total, page, pageSize } };
 }
 
 async function getDocument(id) {
-  const doc = await prisma.document.findUnique({ where: { id }, include: documentInclude() });
+  const doc = await prisma.document.findUnique({
+    where: { id },
+    include: documentInclude(),
+  });
   if (!doc) throw new ApiError(404, "Document not found");
   return enrichDocument(doc);
 }
@@ -145,7 +150,6 @@ async function createDocument({ file, body, actor, ip }) {
     },
     include: documentInclude(),
   });
-
   await writeAudit({
     actorId: actor.id,
     action: "document.upload",
@@ -154,62 +158,37 @@ async function createDocument({ file, body, actor, ip }) {
     ipAddress: ip,
     metadata: { name: doc.name, fileType: ext },
   });
-
   return enrichDocument(doc);
 }
 
 async function updateDocument({ id, payload, actor, ip }) {
   const existing = await prisma.document.findUnique({ where: { id } });
   if (!existing) throw new ApiError(404, "Document not found");
-
-  assertCanManageDocument(existing, actor);
-
   const data = {};
-  if (payload.name !== undefined) {
-    const name = String(payload.name).trim();
-    if (!name) throw new ApiError(400, "Document name cannot be empty");
-    data.name = name;
-  }
-  if (payload.description !== undefined) {
-    data.description = payload.description === null ? null : String(payload.description);
-  }
-  if (payload.categoryId !== undefined) {
-    data.categoryId = payload.categoryId === null ? null : Number(payload.categoryId);
-  }
-  if (payload.folderId !== undefined) {
-    data.folderId = payload.folderId === null ? null : Number(payload.folderId);
-  }
-  if (Object.keys(data).length === 0) {
-    throw new ApiError(400, "No document fields supplied for update");
-  }
-
+  if (payload.name) data.name = payload.name.trim();
+  if (payload.description !== undefined) data.description = payload.description;
+  if (payload.categoryId) data.categoryId = payload.categoryId;
+  if (payload.folderId) data.folderId = payload.folderId;
   const doc = await prisma.document.update({
     where: { id },
     data,
     include: documentInclude(),
   });
-
   await writeAudit({
     actorId: actor.id,
     action: "document.update",
     resourceType: "Document",
     resourceId: id,
     ipAddress: ip,
-    metadata: { fields: Object.keys(data) },
   });
-
   return enrichDocument(doc);
 }
 
 async function deleteDocument({ id, actor, ip }) {
   const existing = await prisma.document.findUnique({ where: { id } });
   if (!existing) throw new ApiError(404, "Document not found");
-
-  assertCanManageDocument(existing, actor);
-
-  await removeFile(existing.storageProvider, existing.storageKey);
   await prisma.document.delete({ where: { id } });
-
+  await removeFile(existing.storageProvider, existing.storageKey);
   await writeAudit({
     actorId: actor.id,
     action: "document.delete",
@@ -226,7 +205,6 @@ async function recordDownload({ id, actor, ip }) {
     include: documentInclude(),
   });
   if (!doc) throw new ApiError(404, "Document not found");
-
   await writeAudit({
     actorId: actor.id,
     action: "document.download",
@@ -234,7 +212,6 @@ async function recordDownload({ id, actor, ip }) {
     resourceId: id,
     ipAddress: ip,
   });
-
   return doc;
 }
 

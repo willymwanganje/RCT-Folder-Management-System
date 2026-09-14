@@ -11,7 +11,7 @@ import ConfirmDialog from "../components/ConfirmDialog";
 import Spinner from "../components/Spinner";
 
 export default function DocumentsPage({ mine }) {
-  const { user } = useAuth();
+  const { can } = useAuth();
   const toast = useToast();
   const [params, setParams] = useSearchParams();
   const [rows, setRows] = useState([]);
@@ -30,8 +30,8 @@ export default function DocumentsPage({ mine }) {
   function update(next) {
     const merged = { q, categoryId, fileType, from, to, page, ...next };
     const sp = new URLSearchParams();
-    Object.entries(merged).forEach(([key, value]) => {
-      if (value) sp.set(key, value);
+    Object.entries(merged).forEach(([k, v]) => {
+      if (v) sp.set(k, v);
     });
     setParams(sp);
   }
@@ -48,9 +48,7 @@ export default function DocumentsPage({ mine }) {
     if (fileType) qs.set("fileType", fileType);
     if (from) qs.set("from", from);
     if (to) qs.set("to", to);
-
     const path = mine ? `/api/documents/mine?${qs}` : `/api/documents?${qs}`;
-
     api
       .get(path)
       .then((res) => {
@@ -64,20 +62,13 @@ export default function DocumentsPage({ mine }) {
   async function remove(id) {
     try {
       await api.del(`/api/documents/${id}`);
-      setRows((previous) => previous.filter((document) => document.id !== id));
+      setRows((prev) => prev.filter((d) => d.id !== id));
       toast.push("Document deleted");
     } catch (err) {
       toast.push(err.message, "error");
     } finally {
       setPendingDelete(null);
     }
-  }
-
-  function canManage(document) {
-    const ownerId = document.uploadedById ?? document.uploadedBy?.id;
-    const isOwner = Number(ownerId) === Number(user?.id);
-    const isAdmin = ["admin", "super_admin"].includes(user?.role);
-    return isOwner || isAdmin;
   }
 
   return (
@@ -87,19 +78,24 @@ export default function DocumentsPage({ mine }) {
           <h1>{mine ? "My documents" : "Documents"}</h1>
           <p>Search, filter and manage organizational files.</p>
         </div>
+        {can("document.create") && (
+          <Link className="btn primary" to="/documents/upload">
+            Upload document
+          </Link>
+        )}
       </div>
 
       <form
         className="filters card"
-        onSubmit={(event) => {
-          event.preventDefault();
-          const formData = new FormData(event.target);
+        onSubmit={(e) => {
+          e.preventDefault();
+          const fd = new FormData(e.target);
           update({
-            q: formData.get("q"),
-            categoryId: formData.get("categoryId"),
-            fileType: formData.get("fileType"),
-            from: formData.get("from"),
-            to: formData.get("to"),
+            q: fd.get("q"),
+            categoryId: fd.get("categoryId"),
+            fileType: fd.get("fileType"),
+            from: fd.get("from"),
+            to: fd.get("to"),
             page: "1",
           });
         }}
@@ -107,16 +103,18 @@ export default function DocumentsPage({ mine }) {
         <input name="q" defaultValue={q} placeholder="Search name, description, folder, uploader…" />
         <select name="categoryId" defaultValue={categoryId}>
           <option value="">All categories</option>
-          {categories.map((category) => (
-            <option key={category.id} value={category.id}>
-              {category.name}
+          {categories.map((c) => (
+            <option key={c.id} value={c.id}>
+              {c.name}
             </option>
           ))}
         </select>
         <input name="fileType" defaultValue={fileType} placeholder="Type e.g. pdf" />
         <input type="date" name="from" defaultValue={from} />
         <input type="date" name="to" defaultValue={to} />
-        <button className="btn primary" type="submit">Search</button>
+        <button className="btn primary" type="submit">
+          Search
+        </button>
       </form>
 
       {loading ? (
@@ -137,53 +135,40 @@ export default function DocumentsPage({ mine }) {
               </tr>
             </thead>
             <tbody>
-              {rows.map((doc) => {
-                const manageable = canManage(doc);
-
-                return (
-                  <tr key={doc.id}>
-                    <td>
-                      <div className="cell-file">
-                        <FileIcon type={doc.fileType} />
-                        <div>
-                          <Link to={`/documents/${doc.id}`}>{doc.name}</Link>
-                          <small>
-                            {doc.fileType.toUpperCase()} · {(doc.fileSize / 1024).toFixed(0)} KB
-                          </small>
-                        </div>
+              {rows.map((doc) => (
+                <tr key={doc.id}>
+                  <td>
+                    <div className="cell-file">
+                      <FileIcon type={doc.fileType} />
+                      <div>
+                        <Link to={`/documents/${doc.id}`}>{doc.name}</Link>
+                        <small>{doc.fileType.toUpperCase()} · {(doc.fileSize / 1024).toFixed(0)} KB</small>
                       </div>
-                    </td>
-                    <td><span className="chip">{doc.category?.name}</span></td>
-                    <td>{doc.folder?.name}</td>
-                    <td>
-                      <div className="cell-user">
-                        <Avatar user={doc.uploadedBy} size={28} />
-                        {doc.uploadedBy?.fullName}
-                      </div>
-                    </td>
-                    <td>{new Date(doc.createdAt).toLocaleDateString()}</td>
-                    <td className="row-actions">
-                      {manageable && (
-                        <Link className="btn ghost sm" to={`/documents/${doc.id}`}>
-                          Edit
-                        </Link>
-                      )}
-                      {manageable && (
-                        <button
-                          type="button"
-                          className="btn ghost sm"
-                          onClick={() => setPendingDelete(doc)}
-                        >
-                          Delete
-                        </button>
-                      )}
-                    </td>
-                  </tr>
-                );
-              })}
+                    </div>
+                  </td>
+                  <td>
+                    <span className="chip">{doc.category?.name}</span>
+                  </td>
+                  <td>{doc.folder?.name}</td>
+                  <td>
+                    <div className="cell-user">
+                      <Avatar user={doc.uploadedBy} size={28} />
+                      {doc.uploadedBy?.fullName}
+                    </div>
+                  </td>
+                  <td>{new Date(doc.createdAt).toLocaleDateString()}</td>
+                  <td className="row-actions">
+                    {can("document.delete") && (
+                      <button type="button" className="btn ghost sm" onClick={() => setPendingDelete(doc)}>
+                        Delete
+                      </button>
+                    )}
+                  </td>
+                </tr>
+              ))}
             </tbody>
           </table>
-          <Pagination meta={meta} onPage={(nextPage) => update({ page: String(nextPage) })} />
+          <Pagination meta={meta} onPage={(p) => update({ page: String(p) })} />
         </div>
       )}
 

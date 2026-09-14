@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link, useParams, useNavigate } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import { api } from "../services/api";
 import { useAuth } from "../context/AuthContext";
 import { useToast } from "../context/ToastContext";
@@ -12,47 +12,42 @@ const PREVIEW = ["pdf", "jpg", "jpeg", "png", "txt"];
 
 export default function DocumentDetailsPage() {
   const { id } = useParams();
-  const navigate = useNavigate();
-  const { user } = useAuth();
+  const { can } = useAuth();
   const toast = useToast();
   const [doc, setDoc] = useState(null);
   const [folders, setFolders] = useState([]);
   const [categories, setCategories] = useState([]);
   const [editing, setEditing] = useState(false);
-  const [confirmDelete, setConfirmDelete] = useState(false);
-  const [deleting, setDeleting] = useState(false);
 
   async function load() {
-    const response = await api.get(`/api/documents/${id}`);
-    setDoc(response.data);
+    const res = await api.get(`/api/documents/${id}`);
+    setDoc(res.data);
   }
 
   useEffect(() => {
     load().catch((err) => toast.push(err.message, "error"));
-    api.get("/api/categories").then((response) => setCategories(response.data)).catch(() => {});
-    api.get("/api/folders").then((response) => setFolders(response.data)).catch(() => {});
+    api.get("/api/categories").then((r) => setCategories(r.data)).catch(() => {});
+    api.get("/api/folders").then((r) => setFolders(r.data)).catch(() => {});
   }, [id]);
 
   if (!doc) return <Spinner />;
 
-  const ownerId = doc.uploadedById ?? doc.uploadedBy?.id;
-  const isOwner = Number(ownerId) === Number(user?.id);
-  const isAdmin = ["admin", "super_admin"].includes(user?.role);
-  const canManage = isOwner || isAdmin;
   const previewable = PREVIEW.includes(doc.fileType);
+
+  // Tumia previewUrl (signed URL kutoka Supabase) inayotoka backend
   const src = doc.previewUrl || null;
 
-  async function save(event) {
-    event.preventDefault();
-    const formData = new FormData(event.target);
+  async function save(e) {
+    e.preventDefault();
+    const fd = new FormData(e.target);
     try {
-      const response = await api.put(`/api/documents/${id}`, {
-        name: formData.get("name"),
-        description: formData.get("description"),
-        categoryId: formData.get("categoryId"),
-        folderId: formData.get("folderId"),
+      const res = await api.put(`/api/documents/${id}`, {
+        name: fd.get("name"),
+        description: fd.get("description"),
+        categoryId: fd.get("categoryId"),
+        folderId: fd.get("folderId"),
       });
-      setDoc(response.data);
+      setDoc(res.data);
       setEditing(false);
       toast.push("Document updated");
     } catch (err) {
@@ -68,19 +63,6 @@ export default function DocumentDetailsPage() {
     }
   }
 
-  async function handleDelete() {
-    setDeleting(true);
-    try {
-      await api.delete(`/api/documents/${id}`);
-      toast.push("Document deleted");
-      navigate("/documents");
-    } catch (err) {
-      toast.push(err.message, "error");
-      setDeleting(false);
-      setConfirmDelete(false);
-    }
-  }
-
   return (
     <div>
       <div className="page-head">
@@ -89,18 +71,15 @@ export default function DocumentDetailsPage() {
           <p>{doc.category?.name} · {doc.folder?.name}</p>
         </div>
         <div className="row-actions">
-          <button className="btn primary" type="button" onClick={download}>
-            ↓ Download
-          </button>
-          {canManage && (
-            <>
-              <button className="btn ghost" type="button" onClick={() => setEditing(true)}>
-                Edit
-              </button>
-              <button className="btn danger" type="button" onClick={() => setConfirmDelete(true)}>
-                Delete
-              </button>
-            </>
+          {can("document.download") && (
+            <button className="btn primary" type="button" onClick={download}>
+              Download
+            </button>
+          )}
+          {can("document.update") && (
+            <button className="btn ghost" type="button" onClick={() => setEditing(true)}>
+              Edit
+            </button>
           )}
         </div>
       </div>
@@ -111,11 +90,7 @@ export default function DocumentDetailsPage() {
           {previewable && src ? (
             <>
               {doc.fileType === "pdf" && (
-                <iframe
-                  className="preview"
-                  title="preview"
-                  src={`${src}#toolbar=0&navpanes=0&scrollbar=0`}
-                />
+                <iframe className="preview" title="preview" src={src} />
               )}
               {["jpg", "jpeg", "png"].includes(doc.fileType) && (
                 <img className="preview-img" src={src} alt={doc.name} />
@@ -125,7 +100,9 @@ export default function DocumentDetailsPage() {
               )}
             </>
           ) : (
-            <p className="muted">Preview is not available for this file type. Download the file to view it.</p>
+            <p className="muted">
+              Preview is not available for this file type. Download the file to view it.
+            </p>
           )}
         </section>
 
@@ -146,13 +123,14 @@ export default function DocumentDetailsPage() {
               <FileIcon type={doc.fileType} /> {doc.originalName} · {(doc.fileSize / 1024).toFixed(1)} KB
             </dd>
             <dt>Folder</dt>
-            <dd><Link to={`/folders/${doc.folderId}`}>{doc.folder?.name}</Link></dd>
+            <dd>
+              <Link to={`/folders/${doc.folderId}`}>{doc.folder?.name}</Link>
+            </dd>
           </dl>
         </section>
       </div>
 
-      {/* Edit Modal */}
-      {editing && canManage && (
+      {editing && (
         <Modal title="Update document" onClose={() => setEditing(false)}>
           <form className="form-grid" onSubmit={save}>
             <label className="full">
@@ -162,16 +140,20 @@ export default function DocumentDetailsPage() {
             <label>
               Category
               <select name="categoryId" defaultValue={doc.categoryId}>
-                {categories.map((category) => (
-                  <option key={category.id} value={category.id}>{category.name}</option>
+                {categories.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.name}
+                  </option>
                 ))}
               </select>
             </label>
             <label>
               Folder
               <select name="folderId" defaultValue={doc.folderId}>
-                {folders.map((folder) => (
-                  <option key={folder.id} value={folder.id}>{folder.name}</option>
+                {folders.map((f) => (
+                  <option key={f.id} value={f.id}>
+                    {f.name}
+                  </option>
                 ))}
               </select>
             </label>
@@ -180,25 +162,14 @@ export default function DocumentDetailsPage() {
               <textarea name="description" rows="4" defaultValue={doc.description || ""} />
             </label>
             <div className="form-actions full">
-              <button className="btn ghost" type="button" onClick={() => setEditing(false)}>Cancel</button>
-              <button className="btn primary" type="submit">Save</button>
+              <button className="btn ghost" type="button" onClick={() => setEditing(false)}>
+                Cancel
+              </button>
+              <button className="btn primary" type="submit">
+                Save
+              </button>
             </div>
           </form>
-        </Modal>
-      )}
-
-      {/* Delete Confirm Modal */}
-      {confirmDelete && (
-        <Modal title="Delete document" onClose={() => setConfirmDelete(false)}>
-          <p>Are you sure you want to delete <strong>{doc.name}</strong>? This action cannot be undone.</p>
-          <div className="form-actions full">
-            <button className="btn ghost" type="button" onClick={() => setConfirmDelete(false)} disabled={deleting}>
-              Cancel
-            </button>
-            <button className="btn danger" type="button" onClick={handleDelete} disabled={deleting}>
-              {deleting ? "Deleting..." : "Yes, Delete"}
-            </button>
-          </div>
         </Modal>
       )}
     </div>
