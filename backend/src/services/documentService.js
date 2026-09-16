@@ -76,7 +76,7 @@ async function enrichDocument(doc) {
   // Signed URL kwa profile photo ya uploader
   if (
     doc.uploadedBy?.profilePhotoUrl &&
-    !doc.uploadedBy.profilePhotoUrl.startsWith("http")
+    !doc.uploadedBy.profilePhotoUrl.startsWith("http" )
   ) {
     try {
       doc.uploadedBy.profilePhotoUrl = await createSignedDownloadUrl(
@@ -164,6 +164,9 @@ async function createDocument({ file, body, actor, ip }) {
 async function updateDocument({ id, payload, actor, ip }) {
   const existing = await prisma.document.findUnique({ where: { id } });
   if (!existing) throw new ApiError(404, "Document not found");
+  if (!actor?.isSuperAdmin && !actor?.permissions?.includes("document.update") && existing.uploadedById !== actor?.id) {
+    throw new ApiError(403, "You can only edit documents that you uploaded");
+  }
   const data = {};
   if (payload.name) data.name = payload.name.trim();
   if (payload.description !== undefined) data.description = payload.description;
@@ -187,6 +190,9 @@ async function updateDocument({ id, payload, actor, ip }) {
 async function deleteDocument({ id, actor, ip }) {
   const existing = await prisma.document.findUnique({ where: { id } });
   if (!existing) throw new ApiError(404, "Document not found");
+  if (!actor?.isSuperAdmin && !actor?.permissions?.includes("document.delete") && existing.uploadedById !== actor?.id) {
+    throw new ApiError(403, "You can only delete documents that you uploaded");
+  }
   await prisma.document.delete({ where: { id } });
   await removeFile(existing.storageProvider, existing.storageKey);
   await writeAudit({

@@ -87,6 +87,16 @@ const idParam = z.object({
   params: z.object({ id: z.string().uuid() }),
 });
 
+const permissionOverridesSchema = z.object({
+  params: z.object({ id: z.string().uuid() }),
+  body: z.object({
+    permissionOverrides: z.array(z.object({
+      permissionId: z.string().uuid(),
+      granted: z.boolean(),
+    })),
+  }),
+});
+
 const categorySchema = z.object({
   body: z.object({
     name: z.string().min(2),
@@ -131,6 +141,7 @@ module.exports = {
   userCreateSchema,
   userUpdateSchema,
   idParam,
+  permissionOverridesSchema,
   categorySchema,
   folderSchema,
   documentMetaSchema,

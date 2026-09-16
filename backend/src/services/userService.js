@@ -22,6 +22,11 @@ function stripSecrets(user, permissions) {
       ? { id: role.id, name: role.name, slug: role.slug, description: role.description }
       : null,
     permissions,
+    permissionOverrides: (user.userPermissions || []).map((up) => ({
+      permissionId: up.permissionId,
+      key: up.permission.key,
+      granted: up.granted,
+    })),
   };
 }
 
@@ -47,7 +52,7 @@ async function toPublicUser(user) {
   // Generate signed URL kwa profile photo
   if (
     publicUser.profilePhotoUrl &&
-    !publicUser.profilePhotoUrl.startsWith("http")
+    !publicUser.profilePhotoUrl.startsWith("http" )
   ) {
     try {
       publicUser.profilePhotoUrl = await createSignedDownloadUrl(
@@ -75,6 +80,11 @@ function isAdminRole(role) {
 
 async function applyPermissionOverrides(userId, overrides) {
   if (!Array.isArray(overrides)) return;
+  const permissionIds = [...new Set(overrides.map((o) => o.permissionId))];
+  const existing = await prisma.permission.count({ where: { id: { in: permissionIds } } });
+  if (existing !== permissionIds.length) {
+    throw new ApiError(400, "One or more permission IDs are invalid");
+  }
   await prisma.userPermission.deleteMany({ where: { userId } });
   if (!overrides.length) return;
   await prisma.userPermission.createMany({

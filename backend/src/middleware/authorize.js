@@ -1,4 +1,5 @@
 const ApiError = require("../utils/ApiError");
+const prisma = require("../config/prisma");
 const { hasPermission } = require("../services/rbacService");
 
 function requirePermission(...keys) {
@@ -11,4 +12,29 @@ function requirePermission(...keys) {
   };
 }
 
-module.exports = { requirePermission };
+function requireAnyPermission(...keys) {
+  return (req, res, next) => {
+    const permissions = req.authUser?.permissions || [];
+    if (req.authUser?.isSuperAdmin || keys.some((key) => permissions.includes(key))) return next();
+    next(new ApiError(403, "You do not have permission to perform this action"));
+  };
+}
+
+function requireDocumentPermission(permission) {
+  return async (req, res, next) => {
+    try {
+      const permissions = req.authUser?.permissions || [];
+      if (req.authUser?.isSuperAdmin || permissions.includes(permission)) return next();
+      const document = await prisma.document.findUnique({
+        where: { id: req.params.id },
+        select: { uploadedById: true },
+      });
+      if (document?.uploadedById === req.user?.id) return next();
+      return next(new ApiError(403, "You can only manage documents that you uploaded"));
+    } catch (error) {
+      next(error);
+    }
+  };
+}
+
+module.exports = { requirePermission, requireAnyPermission, requireDocumentPermission };

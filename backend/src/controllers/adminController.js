@@ -46,6 +46,17 @@ exports.update = asyncHandler(async (req, res) => {
   success(res, user, "Administrator updated");
 });
 
+exports.updatePermissions = asyncHandler(async (req, res) => {
+  const user = await accountService.updateAccount({
+    id: req.params.id,
+    payload: { permissionOverrides: req.body.permissionOverrides || [] },
+    actor: actor(req),
+    ip: clientIp(req),
+    asAdmin: true,
+  });
+  success(res, user, "Administrator permissions updated");
+});
+
 exports.remove = asyncHandler(async (req, res) => {
   await accountService.deleteAccount({
     id: req.params.id,

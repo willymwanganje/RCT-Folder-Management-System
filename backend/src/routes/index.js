@@ -1,8 +1,8 @@
 const express = require("express");
 const rateLimit = require("express-rate-limit");
 const { authenticate } = require("../middleware/authenticate");
-const { requirePermission } = require("../middleware/authorize");
-const { validate, loginSchema, forgotSchema, resetSchema, changePasswordSchema, userCreateSchema, userUpdateSchema, idParam, categorySchema, folderSchema } = require("../validators/schemas");
+const { requirePermission, requireAnyPermission, requireDocumentPermission } = require("../middleware/authorize");
+const { validate, loginSchema, forgotSchema, resetSchema, changePasswordSchema, userCreateSchema, userUpdateSchema, permissionOverridesSchema, idParam, categorySchema, folderSchema } = require("../validators/schemas");
 const { upload } = require("../middleware/upload");
 const auth = require("../controllers/authController");
 const users = require("../controllers/userController");
@@ -36,6 +36,7 @@ function userRoutes() {
   r.post("/", requirePermission("user.create"), validate(userCreateSchema), users.create);
   r.get("/:id", requirePermission("user.view"), validate(idParam), users.get);
   r.put("/:id", requirePermission("user.update"), validate(userUpdateSchema), users.update);
+  r.put("/:id/permissions", requirePermission("user.assign_permission"), validate(permissionOverridesSchema), users.updatePermissions);
   r.delete("/:id", requirePermission("user.delete"), validate(idParam), users.remove);
   r.post("/:id/activate", requirePermission("user.activate"), validate(idParam), users.activate);
   r.post("/:id/deactivate", requirePermission("user.deactivate"), validate(idParam), users.deactivate);
@@ -51,6 +52,7 @@ function adminRoutes() {
   r.post("/", requirePermission("admin.create"), validate(userCreateSchema), admins.create);
   r.get("/:id", requirePermission("admin.view"), validate(idParam), admins.get);
   r.put("/:id", requirePermission("admin.update"), validate(userUpdateSchema), admins.update);
+  r.put("/:id/permissions", requirePermission("user.assign_permission"), validate(permissionOverridesSchema), admins.updatePermissions);
   r.delete("/:id", requirePermission("admin.delete"), validate(idParam), admins.remove);
   r.post("/:id/activate", requirePermission("admin.activate"), validate(idParam), admins.activate);
   r.post("/:id/deactivate", requirePermission("admin.deactivate"), validate(idParam), admins.deactivate);
@@ -87,8 +89,8 @@ function documentRoutes() {
   r.get("/mine", requirePermission("document.view"), resources.myDocuments);
   r.get("/:id", requirePermission("document.view"), validate(idParam), resources.getDocument);
   r.post("/", requirePermission("document.create"), upload.single("file"), resources.createDocument);
-  r.put("/:id", requirePermission("document.update"), validate(idParam), resources.updateDocument);
-  r.delete("/:id", requirePermission("document.delete"), validate(idParam), resources.deleteDocument);
+  r.put("/:id", requireDocumentPermission("document.update"), validate(idParam), resources.updateDocument);
+  r.delete("/:id", requireDocumentPermission("document.delete"), validate(idParam), resources.deleteDocument);
   r.get("/:id/download", requirePermission("document.download"), validate(idParam), resources.downloadDocument);
   return r;
 }
@@ -98,7 +100,7 @@ function miscRoutes() {
   r.use(authenticate);
   r.get("/roles", requirePermission("role.view"), resources.listRoles);
   r.put("/roles/:id/permissions", requirePermission("role.update"), resources.updateRolePermissions);
-  r.get("/permissions", requirePermission("role.view"), resources.listPermissions);
+  r.get("/permissions", requireAnyPermission("role.view", "user.assign_permission"), resources.listPermissions);
   r.get("/audit-logs", requirePermission("audit.view"), resources.auditLogs);
   r.get("/dashboard/admin", requirePermission("dashboard.admin"), resources.adminDashboard);
   r.get("/dashboard/me", resources.userDashboard);

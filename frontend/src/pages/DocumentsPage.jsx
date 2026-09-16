@@ -11,7 +11,7 @@ import ConfirmDialog from "../components/ConfirmDialog";
 import Spinner from "../components/Spinner";
 
 export default function DocumentsPage({ mine }) {
-  const { can } = useAuth();
+  const { user, can } = useAuth();
   const toast = useToast();
   const [params, setParams] = useSearchParams();
   const [rows, setRows] = useState([]);
@@ -158,7 +158,12 @@ export default function DocumentsPage({ mine }) {
                   </td>
                   <td>{new Date(doc.createdAt).toLocaleDateString()}</td>
                   <td className="row-actions">
-                    {can("document.delete") && (
+                    {(can("document.update") || doc.uploadedById === user?.id || doc.uploadedBy?.id === user?.id) && (
+                      <Link className="btn ghost sm" to={`/documents/${doc.id}`}>
+                        Edit
+                      </Link>
+                    )}
+                    {(can("document.delete") || doc.uploadedById === user?.id || doc.uploadedBy?.id === user?.id) && (
                       <button type="button" className="btn ghost sm" onClick={() => setPendingDelete(doc)}>
                         Delete
                       </button>

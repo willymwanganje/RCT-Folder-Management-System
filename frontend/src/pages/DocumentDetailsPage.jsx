@@ -12,7 +12,7 @@ const PREVIEW = ["pdf", "jpg", "jpeg", "png", "txt"];
 
 export default function DocumentDetailsPage() {
   const { id } = useParams();
-  const { can } = useAuth();
+  const { user, can } = useAuth();
   const toast = useToast();
   const [doc, setDoc] = useState(null);
   const [folders, setFolders] = useState([]);
@@ -76,7 +76,7 @@ export default function DocumentDetailsPage() {
               Download
             </button>
           )}
-          {can("document.update") && (
+          {(can("document.update") || doc.uploadedById === user?.id || doc.uploadedBy?.id === user?.id) && (
             <button className="btn ghost" type="button" onClick={() => setEditing(true)}>
               Edit
             </button>

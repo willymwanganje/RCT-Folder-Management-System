@@ -184,7 +184,7 @@ exports.updateDocument = asyncHandler(async (req, res) => {
   const item = await documentService.updateDocument({
     id: req.params.id,
     payload: req.body,
-    actor: req.user,
+    actor: { ...req.user, permissions: req.authUser?.permissions || [] },
     ip: clientIp(req),
   });
 
@@ -194,7 +194,7 @@ exports.updateDocument = asyncHandler(async (req, res) => {
 exports.deleteDocument = asyncHandler(async (req, res) => {
   await documentService.deleteDocument({
     id: req.params.id,
-    actor: req.user,
+    actor: { ...req.user, permissions: req.authUser?.permissions || [] },
     ip: clientIp(req),
   });
 
