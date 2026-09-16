@@ -131,6 +131,9 @@ async function createDocument({ file, body, actor, ip }) {
   if (!category || !category.isActive) throw new ApiError(400, "Category is invalid or inactive");
   const folder = await prisma.folder.findUnique({ where: { id: body.folderId } });
   if (!folder) throw new ApiError(400, "Folder not found");
+  if (folder.categoryId !== body.categoryId) {
+    throw new ApiError(400, "The selected folder does not belong to the selected category");
+  }
 
   const stored = await saveFile(file.buffer, { folder: "documents", ext });
   const doc = await prisma.document.create({

@@ -71,16 +71,21 @@ async function getFolder(id) {
 }
 
 async function createFolder({ name, parentId, categoryId, actor, ip }) {
+  let resolvedCategoryId = categoryId || null;
   if (parentId) {
-    const parent = await prisma.folder.findUnique({ where: { id: parentId } });
+    const parent = await prisma.folder.findUnique({ where: { id: parentId }, select: { id: true, categoryId: true } });
     if (!parent) throw new ApiError(400, "Parent folder not found");
+    if (resolvedCategoryId && parent.categoryId && resolvedCategoryId !== parent.categoryId) {
+      throw new ApiError(400, "A subfolder must belong to the same category as its parent folder");
+    }
+    resolvedCategoryId = resolvedCategoryId || parent.categoryId;
   }
   await ensureUniqueName(name, parentId);
   const folder = await prisma.folder.create({
     data: {
       name: name.trim(),
       parentId: parentId || null,
-      categoryId: categoryId || null,
+      categoryId: resolvedCategoryId,
       createdById: actor.id,
     },
     include: { category: true },

@@ -6,8 +6,6 @@ import "../Sidebar.css";
 const SUPER_ADMIN_NAV = [
   { to: "/", label: "Dashboard", icon: "bi-grid-1x2-fill", end: true },
   { to: "/documents", label: "All Documents", icon: "bi-file-earmark-text", permission: "document.view" },
-  { to: "/documents/upload", label: "Upload Document", icon: "bi-cloud-arrow-up", permission: "document.create" },
-  { to: "/folders", label: "Folders", icon: "bi-folder2-open", permission: "folder.view" },
   { to: "/categories", label: "Categories", icon: "bi-collection", permission: "category.view" },
   { to: "/users", label: "Users", icon: "bi-people", permission: "user.view" },
   { to: "/administrators", label: "Administrators", icon: "bi-shield-check", permission: "admin.view" },
@@ -20,8 +18,6 @@ const SUPER_ADMIN_NAV = [
 const ADMIN_NAV = [
   { to: "/", label: "Dashboard", icon: "bi-grid-1x2-fill", end: true },
   { to: "/documents", label: "Documents", icon: "bi-file-earmark-text", permission: "document.view" },
-  { to: "/documents/upload", label: "Upload Document", icon: "bi-cloud-arrow-up", permission: "document.create" },
-  { to: "/folders", label: "Folders", icon: "bi-folder2-open", permission: "folder.view" },
   { to: "/categories", label: "Categories", icon: "bi-collection", permission: "category.view" },
   { to: "/users", label: "Users", icon: "bi-people", permission: "user.view" },
   { to: "/profile", label: "Profile", icon: "bi-person-circle" },
@@ -32,17 +28,13 @@ const USER_NAV = [
   { to: "/documents", label: "Documents", icon: "bi-file-earmark-text", permission: "document.view" },
   { to: "/documents/mine", label: "My Documents", icon: "bi-file-person", permission: "document.view" },
   { to: "/categories", label: "Categories", icon: "bi-collection", permission: "category.view" },
-  { to: "/folders", label: "Folders", icon: "bi-folder2-open", permission: "folder.view" },
-  { to: "/documents/upload", label: "Upload Document", icon: "bi-cloud-arrow-up", permission: "document.create" },
   { to: "/profile", label: "Profile", icon: "bi-person-circle" },
 ];
 
 export default function Sidebar({ open, onClose }) {
   const { user, can } = useAuth();
   const role = user?.role?.slug;
-  const isSuperAdmin = role === "super_admin";
-  const isAdmin = role === "admin";
-  const navigation = isSuperAdmin ? SUPER_ADMIN_NAV : isAdmin ? ADMIN_NAV : USER_NAV;
+  const navigation = role === "super_admin" ? SUPER_ADMIN_NAV : role === "admin" ? ADMIN_NAV : USER_NAV;
   const items = navigation.filter((item) => !item.permission || can(item.permission));
 
   return (

@@ -78,11 +78,6 @@ export default function DocumentsPage({ mine }) {
           <h1>{mine ? "My documents" : "Documents"}</h1>
           <p>Search, filter and manage organizational files.</p>
         </div>
-        {can("document.create") && (
-          <Link className="btn primary" to="/documents/upload">
-            Upload document
-          </Link>
-        )}
       </div>
 
       <form

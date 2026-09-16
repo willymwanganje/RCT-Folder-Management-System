@@ -20,6 +20,12 @@ function requireAnyPermission(...keys) {
   };
 }
 
+function requireAdminRole(req, res, next) {
+  const role = req.authUser?.role?.slug;
+  if (req.authUser?.isSuperAdmin || role === "super_admin" || role === "admin") return next();
+  next(new ApiError(403, "Only an administrator can manage folders"));
+}
+
 function requireDocumentPermission(permission) {
   return async (req, res, next) => {
     try {
@@ -37,4 +43,9 @@ function requireDocumentPermission(permission) {
   };
 }
 
-module.exports = { requirePermission, requireAnyPermission, requireDocumentPermission };
+module.exports = {
+  requirePermission,
+  requireAnyPermission,
+  requireAdminRole,
+  requireDocumentPermission,
+};

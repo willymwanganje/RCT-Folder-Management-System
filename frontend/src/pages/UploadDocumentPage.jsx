@@ -1,63 +1,45 @@
-import { useEffect, useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { useNavigate, useParams, Link } from "react-router-dom";
 import { api } from "../services/api";
 import { useToast } from "../context/ToastContext";
 
-function flattenFolders(nodes, prefix = "") {
-  const out = [];
-  for (const node of nodes || []) {
-    const label = prefix ? `${prefix} / ${node.name}` : node.name;
-    out.push({ id: node.id, label, categoryId: node.categoryId });
-    out.push(...flattenFolders(node.children, label));
-  }
-  return out;
-}
-
 export default function UploadDocumentPage() {
+  const { categoryId, folderId } = useParams();
   const toast = useToast();
   const navigate = useNavigate();
-  const [categories, setCategories] = useState([]);
-  const [allFolders, setAllFolders] = useState([]);
-  const [categoryId, setCategoryId] = useState("");
+  const [folder, setFolder] = useState(null);
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
-    Promise.all([api.get("/api/categories"), api.get("/api/folders/tree")])
-      .then(([categoriesResponse, foldersResponse]) => {
-        setCategories(categoriesResponse.data.filter((item) => item.isActive !== false));
-        setAllFolders(flattenFolders(foldersResponse.data));
+    api.get(`/api/folders/${folderId}`)
+      .then((response) => {
+        const nextFolder = response.data;
+        if (String(nextFolder.categoryId) !== String(categoryId)) {
+          throw new Error("This folder does not belong to the selected category");
+        }
+        setFolder(nextFolder);
       })
       .catch((err) => toast.push(err.message, "error"));
-  }, []);
+  }, [categoryId, folderId]);
 
-  const folders = useMemo(() => {
-    if (!categoryId) return [];
-    return allFolders.filter((folder) => String(folder.categoryId) === String(categoryId));
-  }, [allFolders, categoryId]);
-
-  async function onSubmit(e) {
-    e.preventDefault();
-    const form = e.currentTarget;
+  async function onSubmit(event) {
+    event.preventDefault();
+    const form = event.currentTarget;
     const fd = new FormData(form);
+    const file = fd.get("file");
 
-    if (!fd.get("categoryId")) {
-      toast.push("Select a category", "error");
-      return;
-    }
-    if (!fd.get("folderId")) {
-      toast.push("Select a folder inside the category", "error");
-      return;
-    }
-    if (!fd.get("file")?.size) {
+    if (!file?.size) {
       toast.push("Choose a file", "error");
       return;
     }
 
+    fd.set("categoryId", categoryId);
+    fd.set("folderId", folderId);
     setBusy(true);
     try {
       await api.postForm("/api/documents", fd);
-      toast.push("Document uploaded");
-      navigate("/documents");
+      toast.push("Document uploaded to the selected folder");
+      navigate(`/categories/${categoryId}/folders/${folderId}`);
     } catch (err) {
       toast.push(err.message, "error");
     } finally {
@@ -69,56 +51,33 @@ export default function UploadDocumentPage() {
     <div className="narrow">
       <div className="page-head">
         <div>
-          <h1>Upload document</h1>
-          <p>Choose a category first, then select one of its folders.</p>
+          <span className="section-kicker"><i className="bi bi-cloud-arrow-up" /> Folder upload</span>
+          <h1>Upload to {folder?.name || "selected folder"}</h1>
+          <p>Every document is saved directly inside this folder and its category.</p>
         </div>
+        <Link className="btn ghost" to={`/categories/${categoryId}/folders/${folderId}`}>Back to folder</Link>
       </div>
 
       <form className="card form-grid" onSubmit={onSubmit}>
-        <label>
+        <label className="full">
           File
-          <input type="file" name="file" required disabled={busy} />
-        </label>
-        <label>
-          Document name
-          <input name="name" required disabled={busy} />
-        </label>
-        <label>
-          Category
-          <select
-            name="categoryId"
-            value={categoryId}
-            onChange={(e) => setCategoryId(e.target.value)}
-            required
-            disabled={busy}
-          >
-            <option value="">Select category</option>
-            {categories.map((category) => (
-              <option key={category.id} value={category.id}>{category.name}</option>
-            ))}
-          </select>
-        </label>
-        <label>
-          Folder
-          <select name="folderId" required disabled={!categoryId || busy}>
-            <option value="">
-              {categoryId ? "Select folder" : "Select category first"}
-            </option>
-            {folders.map((folder) => (
-              <option key={folder.id} value={folder.id}>{folder.label}</option>
-            ))}
-          </select>
-          {categoryId && folders.length === 0 && (
-            <small className="form-hint">No folders have been assigned to this category yet.</small>
-          )}
+          <input type="file" name="file" required disabled={busy || !folder} />
         </label>
         <label className="full">
+          Document name
+          <input name="name" required disabled={busy || !folder} />
+        </label>
+        <div className="card folder-context-card full">
+          <strong><i className="bi bi-folder-fill me-2" />{folder?.name || "Loading folder…"}</strong>
+          <small>{folder?.category?.name || "Selected category"} · This location is locked for this upload.</small>
+        </div>
+        <label className="full">
           Description
-          <textarea name="description" rows="4" required disabled={busy} />
+          <textarea name="description" rows="4" required disabled={busy || !folder} />
         </label>
         <div className="form-actions full">
-          <button className="btn primary" disabled={busy || !categoryId || folders.length === 0} type="submit">
-            {busy ? "Uploading…" : "Upload document"}
+          <button className="btn primary" disabled={busy || !folder} type="submit">
+            {busy ? "Uploading…" : "Upload to this folder"}
           </button>
         </div>
       </form>

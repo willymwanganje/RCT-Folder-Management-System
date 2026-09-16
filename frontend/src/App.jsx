@@ -41,15 +41,12 @@ export default function App() {
 
         <Route path="/documents" element={<ProtectedRoute permission="document.view"><DocumentsPage /></ProtectedRoute>} />
         <Route path="/documents/mine" element={<ProtectedRoute permission="document.view"><DocumentsPage mine /></ProtectedRoute>} />
-        <Route path="/documents/upload" element={<ProtectedRoute permission="document.create"><UploadDocumentPage /></ProtectedRoute>} />
         <Route path="/documents/:id" element={<ProtectedRoute permission="document.view"><DocumentDetailsPage /></ProtectedRoute>} />
 
         <Route path="/categories" element={<ProtectedRoute permission="category.view"><CategoriesPage /></ProtectedRoute>} />
         <Route path="/categories/:categoryId" element={<ProtectedRoute permission="category.view"><FoldersPage /></ProtectedRoute>} />
+        <Route path="/categories/:categoryId/folders/:folderId/upload" element={<ProtectedRoute permission="document.create"><UploadDocumentPage /></ProtectedRoute>} />
         <Route path="/categories/:categoryId/folders/:id" element={<ProtectedRoute permission="category.view"><FoldersPage /></ProtectedRoute>} />
-
-        <Route path="/folders" element={<ProtectedRoute permission="folder.view"><FoldersPage /></ProtectedRoute>} />
-        <Route path="/folders/:id" element={<ProtectedRoute permission="folder.view"><FoldersPage /></ProtectedRoute>} />
 
         <Route path="/users" element={<ProtectedRoute permission="user.view"><UsersPage /></ProtectedRoute>} />
         <Route path="/users/:id" element={<ProtectedRoute permission="user.view"><UserDetailsPage /></ProtectedRoute>} />

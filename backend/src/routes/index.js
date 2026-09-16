@@ -1,7 +1,7 @@
 const express = require("express");
 const rateLimit = require("express-rate-limit");
 const { authenticate } = require("../middleware/authenticate");
-const { requirePermission, requireAnyPermission, requireDocumentPermission } = require("../middleware/authorize");
+const { requirePermission, requireAnyPermission, requireAdminRole, requireDocumentPermission } = require("../middleware/authorize");
 const { validate, loginSchema, forgotSchema, resetSchema, changePasswordSchema, userCreateSchema, userUpdateSchema, permissionOverridesSchema, idParam, categorySchema, folderSchema } = require("../validators/schemas");
 const { upload } = require("../middleware/upload");
 const auth = require("../controllers/authController");
@@ -76,9 +76,9 @@ function folderRoutes() {
   r.get("/", requirePermission("folder.view"), resources.listFolders);
   r.get("/tree", requirePermission("folder.view"), resources.folderTree);
   r.get("/:id", requirePermission("folder.view"), validate(idParam), resources.getFolder);
-  r.post("/", requirePermission("folder.create"), validate(folderSchema), resources.createFolder);
-  r.put("/:id", requirePermission("folder.update"), validate(idParam), resources.updateFolder);
-  r.delete("/:id", requirePermission("folder.delete"), validate(idParam), resources.deleteFolder);
+  r.post("/", requirePermission("folder.create"), requireAdminRole, validate(folderSchema), resources.createFolder);
+  r.put("/:id", requirePermission("folder.update"), requireAdminRole, validate(idParam), resources.updateFolder);
+  r.delete("/:id", requirePermission("folder.delete"), requireAdminRole, validate(idParam), resources.deleteFolder);
   return r;
 }
 

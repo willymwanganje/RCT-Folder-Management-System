@@ -95,6 +95,7 @@ export default function FoldersPage() {
   const { id, categoryId } = useParams();
   const { user, can } = useAuth();
   const canCreateFolder = ["super_admin", "admin"].includes(user?.role?.slug) && can("folder.create");
+  const canUpload = can("document.create");
   const toast = useToast();
 
   const [tree, setTree] = useState([]);
@@ -161,7 +162,7 @@ export default function FoldersPage() {
     try {
       await api.post("/api/folders", {
         name: formData.get("name"),
-        parentId: formData.get("parentId") || null,
+        parentId: id || formData.get("parentId") || null,
         categoryId: formData.get("categoryId") || categoryId || null,
       });
 
@@ -231,16 +232,20 @@ export default function FoldersPage() {
           </p>
         </div>
 
-        {canCreateFolder && (
-          <button
-            className="btn primary"
-            type="button"
-            onClick={() => setShowCreate(true)}
-          >
-            <i className="bi bi-plus-lg me-2" aria-hidden="true" />
-            New folder
-          </button>
-        )}
+        <div className="row-actions">
+          {canCreateFolder && (
+            <button className="btn primary" type="button" onClick={() => setShowCreate(true)}>
+              <i className="bi bi-folder-plus me-2" aria-hidden="true" />
+              {id ? "Add subfolder" : "Add folder"}
+            </button>
+          )}
+          {id && canUpload && (
+            <Link className="btn ghost" to={`/categories/${categoryId}/folders/${id}/upload`}>
+              <i className="bi bi-cloud-arrow-up me-2" aria-hidden="true" />
+              Upload document
+            </Link>
+          )}
+        </div>
       </div>
 
       <div className={`folders-layout ${id ? "folder-detail-only" : ""}`}>
@@ -319,7 +324,7 @@ export default function FoldersPage() {
                 </form>
               )}
 
-              {folder.children?.length > 0 ? (
+              {folder.children?.length > 0 && (
                 <>
                   <div className="folder-content-heading">
                     <h3>Subfolders</h3>
@@ -336,26 +341,21 @@ export default function FoldersPage() {
                     ))}
                   </div>
                 </>
-              ) : (
-                <>
-                  <div className="folder-content-heading">
-                    <h3>Files</h3>
-                    <span>{folder.documents?.length || 0} files</span>
-                  </div>
-                  <div className="folder-file-list">
-                    {folder.documents?.map((document) => (
-                      <Link key={document.id} to={`/documents/${document.id}`}>
-                        <FileIcon type={document.fileType} />
-                        <span>{document.name}</span>
-                        <i className="bi bi-chevron-right" aria-hidden="true" />
-                      </Link>
-                    ))}
-                    {folder.documents?.length === 0 && (
-                      <span className="muted">No files in this folder</span>
-                    )}
-                  </div>
-                </>
               )}
+              <div className="folder-content-heading">
+                <h3>Files in this folder</h3>
+                <span>{folder.documents?.length || 0} files</span>
+              </div>
+              <div className="folder-file-list">
+                {folder.documents?.map((document) => (
+                  <Link key={document.id} to={`/documents/${document.id}`}>
+                    <FileIcon type={document.fileType} />
+                    <span>{document.name}</span>
+                    <i className="bi bi-chevron-right" aria-hidden="true" />
+                  </Link>
+                ))}
+                {folder.documents?.length === 0 && <span className="muted">No files in this folder yet. Use Upload document above.</span>}
+              </div>
             </>
           )}
         </section>
@@ -371,7 +371,7 @@ export default function FoldersPage() {
 
             <label>
               Parent
-              <select name="parentId" defaultValue={id || ""}>
+              <select name="parentId" defaultValue={id || ""} disabled={Boolean(id)}>
                 <option value="">Root</option>
                 {flatten(visibleTree).map((item) => (
                   <option key={item.id} value={item.id}>
