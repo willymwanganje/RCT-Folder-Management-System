@@ -3,39 +3,20 @@ import { useAuth } from "../context/AuthContext";
 import rctLogo from "../assets/rct-logo.png";
 import "../Sidebar.css";
 
-const SUPER_ADMIN_NAV = [
-  { to: "/", label: "Dashboard", icon: "bi-grid-1x2-fill", end: true },
+const NAV = [
+  { to: "/", label: "Dashboard", icon: "bi-house-door-fill", end: true },
   { to: "/documents", label: "All Documents", icon: "bi-file-earmark-text", permission: "document.view" },
-  { to: "/categories", label: "Categories", icon: "bi-collection", permission: "category.view" },
+  { to: "/categories", label: "Categories", icon: "bi-folder2-open", permission: "category.view" },
   { to: "/users", label: "Users", icon: "bi-people", permission: "user.view" },
   { to: "/administrators", label: "Administrators", icon: "bi-shield-check", permission: "admin.view" },
-  { to: "/roles", label: "Roles & Permissions", icon: "bi-key", permission: "role.view" },
+  { to: "/roles", label: "Roles & Permissions", icon: "bi-shield-check", permission: "role.view" },
   { to: "/audit-logs", label: "Audit Logs", icon: "bi-clock-history", permission: "audit.view" },
   { to: "/settings", label: "Settings", icon: "bi-gear", permission: "settings.view" },
-  { to: "/profile", label: "Profile", icon: "bi-person-circle" },
-];
-
-const ADMIN_NAV = [
-  { to: "/", label: "Dashboard", icon: "bi-grid-1x2-fill", end: true },
-  { to: "/documents", label: "Documents", icon: "bi-file-earmark-text", permission: "document.view" },
-  { to: "/categories", label: "Categories", icon: "bi-collection", permission: "category.view" },
-  { to: "/users", label: "Users", icon: "bi-people", permission: "user.view" },
-  { to: "/profile", label: "Profile", icon: "bi-person-circle" },
-];
-
-const USER_NAV = [
-  { to: "/", label: "Dashboard", icon: "bi-grid-1x2-fill", end: true },
-  { to: "/documents", label: "Documents", icon: "bi-file-earmark-text", permission: "document.view" },
-  { to: "/documents/mine", label: "My Documents", icon: "bi-file-person", permission: "document.view" },
-  { to: "/categories", label: "Categories", icon: "bi-collection", permission: "category.view" },
-  { to: "/profile", label: "Profile", icon: "bi-person-circle" },
 ];
 
 export default function Sidebar({ open, onClose }) {
   const { user, can } = useAuth();
-  const role = user?.role?.slug;
-  const navigation = role === "super_admin" ? SUPER_ADMIN_NAV : role === "admin" ? ADMIN_NAV : USER_NAV;
-  const items = navigation.filter((item) => !item.permission || can(item.permission));
+  const items = NAV.filter((item) => !item.permission || can(item.permission));
 
   return (
     <aside className={`sidebar ${open ? "open" : ""}`} aria-label="Main navigation">
@@ -49,7 +30,16 @@ export default function Sidebar({ open, onClose }) {
             <span>{item.label}</span>
           </NavLink>
         ))}
+        <NavLink to="/profile" onClick={onClose} className="sidebar-link">
+          <i className="bi bi-person-circle" aria-hidden="true" /><span>Profile</span>
+        </NavLink>
       </nav>
+      <div className="sidebar-help">
+        <div className="help-icon"><i className="bi bi-question-circle" /></div>
+        <div><strong>Need Help?</strong><small>Contact system administrator</small></div>
+        <i className="bi bi-chevron-right help-arrow" />
+      </div>
+      <span className="sidebar-user-role" aria-hidden="true">{user?.role?.name || "RCT User"}</span>
     </aside>
   );
 }
