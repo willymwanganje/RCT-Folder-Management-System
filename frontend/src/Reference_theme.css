@@ -34,3 +34,8 @@ body { background:var(--ref-bg); color:var(--ref-text); }
 .back-btn:hover:not(:disabled) { border-color:#8db8ef; background:#f2f7ff; color:#1769e8; }
 .back-btn:disabled { cursor:default; opacity:.42; }
 @media (max-width:780px) { .back-btn { margin-right:8px; padding:8px; }.back-btn span { display:none; } }
+
+/* Mobile menu toggle: white button with visible navy icon */
+.menu-btn { display:inline-grid; place-items:center; width:40px; height:40px; padding:0; border:1px solid #d7e2f0; border-radius:10px; background:#fff !important; color:#183866 !important; cursor:pointer; box-shadow:0 2px 7px rgba(31,55,93,.08); }
+.menu-btn i { color:#183866 !important; font-size:22px; line-height:1; }
+.menu-btn:hover { border-color:#8db8ef; background:#f2f7ff !important; }
